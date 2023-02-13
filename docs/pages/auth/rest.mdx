@@ -1,0 +1,299 @@
+import { Callout } from 'nextra-theme-docs'
+
+# REST Endpoints
+
+## Introduction
+It's reccommended to use one of the client libraries, but if for some reason you can't use them, TurboCore provides a REST API for authentication. You can use this API to sign up, sign in, and log out users. You can also use this API to get a user's information and refresh their JWT token.
+
+## GET /api/auth/get-user
+You can get a user's information by sending a GET request to the /api/auth/get-user endpoint.
+
+**Method:** GET
+
+**Endpoint:** /api/auth/get-user
+
+**Request Body:**
+| Property Name | Type | Description |
+| --- | --- | --- |
+| uid | string | The UID of the user |
+| token | string | The JWT token of the user |
+
+**Response Body:**
+| Property Name | Type | Description |
+| --- | --- | --- |
+| uid | string | The UID of the user |
+| email | string | The email of the user |
+| emailVerified | boolean | Whether the user's email is verified |
+| metadata | object | A JSON object containing any additional metadata you want to store with the user |
+
+**Example response:**
+```json
+{
+    "uid": "710f7e29-4082-4421-b9b5-49f56a393832",
+    "email": "mail@example.com",
+    "emailVerified": true,
+    "metadata": {
+        "role": "admin",
+        "name": "John Doe",
+        "age": 21
+    }
+}
+```
+
+**Common Errors:**
+- **NOT_AUTHENTICATED:** The user is not signed in
+- **USER_NOT_FOUND:** The user was not found
+
+
+## POST /api/auth/login
+You can sign in a user by sending a POST request to the /api/auth/login endpoint. 
+
+**Method:** POST
+
+**Endpoint:** /api/auth/login
+
+**Request Body:**
+| Property Name | Type | Description |
+| --- | --- | --- |
+| email | string | The email of the user |
+| password | string | The password of the user |
+
+**Response Body:**
+| Property Name | Type | Description |
+| --- | --- | --- |
+| uid          | string | The UID of the requested user       |
+| token        | string | The JWT token of requested the user |
+| expiry       | string | The date the token expires in UNIX epoch time |
+| refreshToken | string | A token used to get a new JWT token from TurboCore |
+| emailVerified | boolean | Whether the user's email has been verified |
+| metadata | object | A JSON object containing any additional metadata you want to store with the user |
+
+**Example response:**
+```json
+{
+    "uid": "710f7e29-4082-4421-b9b5-49f56a393832",
+    "token": "[JWT TOKEN]]",
+    "expiry": 1633040000,
+    "refreshToken": "c1d2e3f4g5h6i7j8k9l0.c1d2e3f4g5h6i7j8k9l0.c1d2e3f4g5h6i7j8k9l0",
+    "emailVerified": true,
+    "metadata": {
+        "role": "admin",
+        "name": "John Doe",
+        "age": 21
+    }
+}
+```
+
+**Common Errors:**
+- **INVALID_CREDENTIALS:** The email or password is invalid
+- **USER_DISABLED:** The user has been disabled by an administrator
+
+## POST /api/auth/signup
+You can sign up a user by sending a POST request to the /api/auth/signup endpoint.
+
+**Method:** POST
+
+**Endpoint:** /api/auth/signup
+
+**Request Body:**
+| Property Name | Type | Description |
+| --- | --- | --- |
+| email | string | The email of the user |
+| password | string | The password of the user |
+| login | boolean | Whether to login the user after signing up |
+| emailVerified | boolean | Whether the user's email has been verified |
+| metadata | object | A JSON object containing any additional metadata you want to store with the user |
+{/* TODO: Consider adding a role property */}
+
+**Response Body:**
+| Property Name | Type | Description |
+| --- | --- | --- |
+| uid          | string | The UID of the requested user       |
+| token        | string \| null | The JWT token of requested the user |
+| expiry       | string \| null | The date the token expires in UNIX epoch time |
+| refreshToken | string \| null | A token used to get a new JWT token from TurboCore |
+| emailVerified | boolean | Whether the user's email has been verified |
+| metadata | object | A JSON object containing any additional metadata you want to store with the user |
+
+**Example Response:** Same response as the [login](#post-apiauthlogin) endpoint.
+
+**Common Errors:**
+- **EMAIL_ALREADY_IN_USE:** The email is already in use
+- **INVALID_EMAIL:** The email is invalid
+- **WEAK_PASSWORD:** The password is too weak
+
+
+## POST /api/auth/refresh
+You can refresh a user's JWT token by sending a POST request to the /api/auth/refresh endpoint.
+
+**Method:** POST
+
+**Endpoint:** /api/auth/refresh
+
+**Request Body:**
+| Property Name | Type | Description |
+| --- | --- | --- |
+| refreshToken | string | The refresh token of the user |
+
+**Response Body:**
+| Property Name | Type | Description |
+| --- | --- | --- |
+| uid          | string | The UID of the requested user       |
+| token        | string | The JWT token of requested the user |
+| expiry       | string | The date the token expires in UNIX epoch time |
+| refreshToken | string | A token used to get a new JWT token from TurboCore |
+
+**Example Response:** 
+```json
+{
+    "uid": "710f7e29-4082-4421-b9b5-49f56a393832",
+    "token": "[JWT TOKEN]]",
+    "expiry": 1633040000,
+    "refreshToken": "c1d2e3f4g5h6i7j8k9l0.c1d2e3f4g5h6i7j8k9l0.c1d2e3f4g5h6i7j8k9l0"
+}
+```
+
+**Common Errors:**
+- **INVALID_REFRESH_TOKEN:** The refresh token is invalid
+
+## POST /api/auth/logout
+You can log out a user by sending a POST request to the /api/auth/logout endpoint.
+
+**Method:** POST
+
+**Endpoint:** /api/auth/logout
+
+**Request Body:**
+| Property Name | Type | Description |
+| --- | --- | --- |
+| uid | string | The UID of the user |
+| token | string | The JWT token of the user |
+
+**Response Body:** None
+
+**Common Errors:**
+- **NOT_AUTHENTICATED:** The user is not signed in
+
+## POST /api/auth/magic-link
+You can send a magic link to a user by sending a POST request to the /api/auth/magic-link endpoint. The user will be redirected to the URL specified in the continueUrl parameter after they sign in.
+
+**Method:** POST
+
+**Endpoint:** /api/auth/magic-link
+
+**Request Body:**
+| Property Name | Type | Description |
+| --- | --- | --- |
+| email | string | The email of the user |
+| continueUrl | string | The URL to redirect the user to after they sign in |
+
+**Response Body:** None
+
+**Continue URL Parameters:**
+| Property Name | Type | Description |
+| --- | --- | --- |
+| uid | string | The UID of the user |
+| token | string | The JWT token of the user |
+| expiry | string | The date the token expires in UNIX epoch time |
+| refreshToken | string | A token used to get a new JWT token from TurboCore |
+
+**Common Errors:**
+- **INVALID_EMAIL:** The email is invalid
+- **USER_NOT_FOUND:** The user was not found
+
+## POST /api/auth/verify-email
+You can verify a user's email by sending a POST request to the /api/auth/verify-email endpoint. This will send a verification email to the user's email address.
+
+**Method:** POST
+
+**Endpoint:** /api/auth/verify-email
+
+**Request Body:**
+| Property Name | Type | Description |
+| --- | --- | --- |
+| uid | string | The UID of the user |
+| token | string | The JWT token of the user |
+
+**Response Body:** None
+
+**Common Errors:**
+- **NOT_AUTHENTICATED:** The user is not signed in
+- **EMAIL_ALREADY_VERIFIED:** The user's email is already verified
+- **INVALID_EMAIL:** The email is invalid
+- **USER_NOT_FOUND:** The user was not found
+
+## POST /api/auth/change-password
+You can change a user's password by sending a POST request to the /api/auth/change-password endpoint.
+
+**Method:** POST
+
+**Endpoint:** /api/auth/change-password
+
+**Request Body:**
+| Property Name | Type | Description |
+| --- | --- | --- |
+| uid | string | The UID of the user |
+| oldPassword | string | The old password of the user |
+| newPassword | string | The new password of the user |
+
+**Response Body:** None
+
+**Common Errors:**
+- **NOT_AUTHENTICATED:** The user is not signed in
+- **INVALID_PASSWORD:** The old password is invalid
+- **WEAK_PASSWORD:** The new password is too weak
+
+## POST /api/auth/reset-password
+You can reset a user's password by sending a POST request to the /api/auth/reset-password endpoint. This will send a password reset email to the user's email address. **For security, this endpoint does not return an error if the email is not found.**
+
+**Method:** POST
+
+**Endpoint:** /api/auth/reset-password
+
+**Request Body:**
+| Property Name | Type | Description |
+| --- | --- | --- |
+| email | string | The email of the user |
+
+**Response Body:** None
+
+## POST /api/auth/update-user
+You can update a user's email or metadata by sending a POST request to the /api/auth/update-user endpoint.
+
+**Method:** POST
+
+**Endpoint:** /api/auth/update-user
+
+**Request Body:**
+| Property Name | Type | Description |
+| --- | --- | --- |
+| uid | string | The UID of the user |
+| token | string | The JWT token of the user |
+| email | string | The new email of the user |
+| metadata | object | A JSON object containing any additional metadata you want to store with the user |
+
+**Response Body:** None
+
+**Common Errors:**
+- **NOT_AUTHENTICATED:** The user is not signed in
+- **EMAIL_ALREADY_IN_USE:** The email is already in use
+- **INVALID_EMAIL:** The email is invalid
+
+## DELETE /api/auth/delete-user
+You can delete a user by sending a DELETE request to the /api/auth/delete-user endpoint.
+
+**Method:** DELETE
+
+**Endpoint:** /api/auth/delete-user
+
+**Request Body:**
+| Property Name | Type | Description |
+| --- | --- | --- |
+| uid | string | The UID of the user |
+| token | string | The JWT token of the user |
+
+**Response Body:** None
+
+**Common Errors:**
+- **NOT_AUTHENTICATED:** The user is not signed in
+- **USER_NOT_FOUND:** The user was not found

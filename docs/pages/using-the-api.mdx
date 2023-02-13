@@ -1,0 +1,26 @@
+import { Callout } from 'nextra-theme-docs'
+
+# Using the REST API
+
+It's possible to use the REST API for interacting with TurboCore, but it's recommended that you use one of the client libraries instead.
+
+## Handling Errors
+The REST API will return a `200 OK` response for successful requests, and a `400 Bad Request` response for requests that fail. Successful
+requests will return a JSON body with the response data, and failed requests will return a JSON body with an error code and human readable
+message. Here is an example of a failed authentication request:
+
+```json
+{
+    "code": "INVALID_CREDENTIALS",
+    "message": "The email or password is incorrect."
+}
+```
+<Callout emoji='ℹ️' type='info'>
+    You should always check the HTTP status code of the response to determine how to handle the response. 
+</Callout>
+
+## Admin Endpoints
+The REST API has a few endpoints that should only be used on the server side and never on the client. These endpoints are prefixed with `/api/admin/`. All of these endpoints require an admin token to be passed in the `Authorization` header.
+<Callout emoji='🚫' type='error'>
+    **Warning:** Using these endpoints on the client side gives anyone who has access to your client code the ability to perform any action on your TurboCore instance. This includes creating, updating, and deleting any user, and creating, updating, and deleting any data.
+</Callout>
