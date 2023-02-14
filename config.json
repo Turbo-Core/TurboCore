@@ -1,0 +1,4 @@
+{
+    "database": "postgres",
+    "debug_level": "debug"
+}
