@@ -4,6 +4,16 @@ import { Callout } from 'nextra-theme-docs'
 
 It's possible to use the REST API for interacting with TurboCore, but it's recommended that you use one of the client libraries instead.
 
+## Authentication
+Most endpoints require that you pass a JWT in the `Authorization` header. Endpoints that require authentication will be marked with a 🔒. The JWT should be passed as a `Bearer` token. Here is an example of how to pass a JWT in a `GET` request:
+
+```bash
+curl -X GET \
+  https://[DOMAIN]/api/auth/user \
+  -H 'Authorization: Bearer <JWT>'
+```
+You can get a JWT by making a `POST` request to `/api/auth/login` as described in [Authentication](/auth/rest).
+
 ## Handling Errors
 The REST API will return a `200 OK` response for successful requests, and a `400 Bad Request` response for requests that fail. Successful
 requests will return a JSON body with the response data, and failed requests will return a JSON body with an error code and human readable

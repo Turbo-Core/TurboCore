@@ -5,18 +5,18 @@ import { Callout } from 'nextra-theme-docs'
 ## Introduction
 It's reccommended to use one of the client libraries, but if for some reason you can't use them, TurboCore provides a REST API for authentication. You can use this API to sign up, sign in, and log out users. You can also use this API to get a user's information and refresh their JWT token.
 
-## GET /api/auth/get-user
-You can get a user's information by sending a GET request to the /api/auth/get-user endpoint.
+<Callout emoji='ℹ️' type='info'>
+    Endpoints that require authentication will be marked with a 🔒. See [Using the REST API](/using-the-api) for more information.
+</Callout>
+
+## GET /api/auth/user 🔒
+You can get a user's information by sending a GET request to the /api/auth/user endpoint.
 
 **Method:** GET
 
 **Endpoint:** /api/auth/get-user
 
-**Request Body:**
-| Property Name | Type | Description |
-| --- | --- | --- |
-| uid | string | The UID of the user |
-| token | string | The JWT token of the user |
+**Request Body:** None
 
 **Response Body:**
 | Property Name | Type | Description |
@@ -123,7 +123,7 @@ You can sign up a user by sending a POST request to the /api/auth/signup endpoin
 - **WEAK_PASSWORD:** The password is too weak
 
 
-## POST /api/auth/refresh
+## POST /api/auth/refresh 🔒
 You can refresh a user's JWT token by sending a POST request to the /api/auth/refresh endpoint.
 
 **Method:** POST
@@ -156,18 +156,14 @@ You can refresh a user's JWT token by sending a POST request to the /api/auth/re
 **Common Errors:**
 - **INVALID_REFRESH_TOKEN:** The refresh token is invalid
 
-## POST /api/auth/logout
+## POST /api/auth/logout 🔒
 You can log out a user by sending a POST request to the /api/auth/logout endpoint.
 
 **Method:** POST
 
 **Endpoint:** /api/auth/logout
 
-**Request Body:**
-| Property Name | Type | Description |
-| --- | --- | --- |
-| uid | string | The UID of the user |
-| token | string | The JWT token of the user |
+**Request Body:** None
 
 **Response Body:** None
 
@@ -201,18 +197,14 @@ You can send a magic link to a user by sending a POST request to the /api/auth/m
 - **INVALID_EMAIL:** The email is invalid
 - **USER_NOT_FOUND:** The user was not found
 
-## POST /api/auth/verify-email
+## POST /api/auth/verify-email 🔒
 You can verify a user's email by sending a POST request to the /api/auth/verify-email endpoint. This will send a verification email to the user's email address.
 
 **Method:** POST
 
 **Endpoint:** /api/auth/verify-email
 
-**Request Body:**
-| Property Name | Type | Description |
-| --- | --- | --- |
-| uid | string | The UID of the user |
-| token | string | The JWT token of the user |
+**Request Body:** None
 
 **Response Body:** None
 
@@ -222,7 +214,7 @@ You can verify a user's email by sending a POST request to the /api/auth/verify-
 - **INVALID_EMAIL:** The email is invalid
 - **USER_NOT_FOUND:** The user was not found
 
-## POST /api/auth/change-password
+## POST /api/auth/change-password 🔒
 You can change a user's password by sending a POST request to the /api/auth/change-password endpoint.
 
 **Method:** POST
@@ -257,7 +249,7 @@ You can reset a user's password by sending a POST request to the /api/auth/reset
 
 **Response Body:** None
 
-## POST /api/auth/update-user
+## POST /api/auth/update-user 🔒
 You can update a user's email or metadata by sending a POST request to the /api/auth/update-user endpoint.
 
 **Method:** POST
@@ -267,8 +259,6 @@ You can update a user's email or metadata by sending a POST request to the /api/
 **Request Body:**
 | Property Name | Type | Description |
 | --- | --- | --- |
-| uid | string | The UID of the user |
-| token | string | The JWT token of the user |
 | email | string | The new email of the user |
 | metadata | object | A JSON object containing any additional metadata you want to store with the user |
 
@@ -279,18 +269,14 @@ You can update a user's email or metadata by sending a POST request to the /api/
 - **EMAIL_ALREADY_IN_USE:** The email is already in use
 - **INVALID_EMAIL:** The email is invalid
 
-## DELETE /api/auth/delete-user
+## DELETE /api/auth/delete-user 🔒
 You can delete a user by sending a DELETE request to the /api/auth/delete-user endpoint.
 
 **Method:** DELETE
 
 **Endpoint:** /api/auth/delete-user
 
-**Request Body:**
-| Property Name | Type | Description |
-| --- | --- | --- |
-| uid | string | The UID of the user |
-| token | string | The JWT token of the user |
+**Request Body:** None
 
 **Response Body:** None
 
