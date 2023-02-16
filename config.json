@@ -1,7 +1,0 @@
-{
-    "connection_url": "postgres://turbocore:TEST123@localhost:5432/turbocore",
-    "bcrypt_cost": 12,
-    "secret_key": "8a730530-6fde-46e7-a4f1-3ea18ab97840",
-    "debug_level": "debug",
-    "bind_addr": "0.0.0.0:8080"
-}
