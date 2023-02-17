@@ -39,7 +39,7 @@ async fn main() -> std::io::Result<()> {
                 connection: connection.to_owned(),
                 config: config.to_owned(),
             }))
-            .wrap(middleware::DefaultHeaders::new().add((SERVER, "TrueCore")))
+            .wrap(middleware::DefaultHeaders::new().add((SERVER, "TurboCore")))
             .wrap(Logger::default())
             .default_service(web::route().to(|| HttpResponse::NotFound())) // TODO: Implement 404 fn
             .configure(add_routes)

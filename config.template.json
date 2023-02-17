@@ -1,7 +1,13 @@
 {
     "connection_url": "sqlite::memory:",
-    "bcrypt_cost": 12,
     "secret_key": "8a730530-6fde-46e7-a4f1-3ea18ab97840",
     "debug_level": "info",
-    "bind_addr": "0.0.0.0:8080"
+    "bind_addr": "0.0.0.0:8080",
+    "argon2_params": {
+        "salt_length": 16,
+        "memory": 65536,
+        "iterations": 4,
+        "tagLength": 32,
+        "tag_length": 4
+    }
 }

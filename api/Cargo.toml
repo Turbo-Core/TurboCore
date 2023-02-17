@@ -17,6 +17,7 @@ env_logger = "^0.10.0"
 uuid = { version = "1.3.0", features = ["v4", "fast-rng"] }
 hmac = "0.12.1"
 sha2 = "0.10.6"
+jwt = "0.16.0"
 # Sea-ORM
 entity = { path = "../entity" }
 migration = { path = "../migration" }
@@ -29,6 +30,7 @@ sea-orm = { version = "^0", features = [
     "with-uuid",
     "with-json",
 ] }
+rust-argon2 = "1.0.0"
+rand = "0.8.5"
 # TODO: Use current versions of below:
-bcrypt = "0.10.1"
 chrono = "0.4"

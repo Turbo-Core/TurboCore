@@ -1,7 +1,6 @@
-use api::Config;
+use api::{Config, Argon2Config};
 use hmac::{Hmac, Mac};
 use serde::{Deserialize, Serialize};
-use sha2::Sha256;
 use std::fs;
 use uuid::Uuid;
 
@@ -11,9 +10,10 @@ use uuid::Uuid;
 pub struct ConfigInternal {
     pub connection_url: String,
     pub secret_key: Option<String>,
-    pub bcrypt_cost: Option<u16>,
+    pub bcrypt_cost: Option<u32>,
     pub debug_level: Option<String>,
     pub bind_addr: Option<String>,
+    pub argon2_params: Option<Argon2Config>
 }
 
 fn verify_connection_url(url: &str) -> bool {
@@ -55,10 +55,23 @@ pub fn load_config() -> Config {
             Some(addr) => addr,
             None => "127.0.0.1:8080".to_string(),
         },
+        argon2_config: match json_config.argon2_params {
+            Some(c) => c,
+            None => Argon2Config {
+                salt_length: 16,
+                memory: 65536,
+                iterations: 4,
+                parallelism: std::thread::available_parallelism().unwrap().get() as u32/2,
+                tag_length: 32
+            }
+        }
     };
 
     if !verify_connection_url(&config.connection_url) {
         panic!("Unsupported connection URL: {}", config.connection_url)
+    }
+    if config.argon2_config.salt_length < 8 {
+        panic!("Salt length too short. Must be at least 8")
     }
     config
 }
