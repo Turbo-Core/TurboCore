@@ -5,7 +5,7 @@ use chrono::Utc;
 use entity::users;
 use jwt::SignWithKey;
 use migration::{DbErr, OnConflict};
-use rand::{thread_rng, Rng, RngCore};
+use rand::{thread_rng, Rng};
 use sea_orm::{EntityTrait, Set};
 use serde::Serialize;
 use std::collections::BTreeMap;
@@ -57,8 +57,6 @@ pub async fn handler(data: Data<AppState>, body: Json<SignupBody>) -> impl Respo
         ad: &[],
         hash_length: data.config.argon2_config.tag_length,
     };
-
-    println!("{}", data.config.argon2_config.memory);
 
     let salt: Vec<u8> = (0..data.config.argon2_config.salt_length)
         .map(|_| thread_rng().gen_range(0..255))
@@ -127,6 +125,7 @@ pub async fn handler(data: Data<AppState>, body: Json<SignupBody>) -> impl Respo
                     }),
                     http::StatusCode::CREATED,
                 )
+                // TODO: Add refresh token to database
             } else {
                 (
                     Json(ApiResponse::NoLoginResponse {

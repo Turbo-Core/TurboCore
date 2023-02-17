@@ -2,3 +2,4 @@ docs/.next
 docs/node_modules
 /target
 config.json
+.vscode

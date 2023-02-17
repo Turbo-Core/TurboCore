@@ -7,7 +7,7 @@
         "salt_length": 16,
         "memory": 65536,
         "iterations": 4,
-        "tagLength": 32,
-        "tag_length": 4
+        "parallelism": 2,
+        "tag_length": 32
     }
 }

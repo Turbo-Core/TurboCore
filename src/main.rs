@@ -4,7 +4,6 @@ mod util;
 
 // Internal
 use api::{auth, AppState};
-use sea_orm::DatabaseConnection;
 use util::load_config::{load_config};
 
 // Actix

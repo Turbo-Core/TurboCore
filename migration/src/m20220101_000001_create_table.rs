@@ -24,6 +24,20 @@ impl MigrationTrait for Migration {
             )
             .await?;
         manager
+            .create_table(
+                Table::create()
+                    .table(RefreshTokenEntry::Table)
+                    .if_not_exists()
+                    .col(ColumnDef::new(RefreshTokenEntry::Uid).string().not_null())
+                    .col(
+                        ColumnDef::new(RefreshTokenEntry::RefreshToken)
+                            .string()
+                            .not_null().primary_key(),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+        manager
             .create_index(
                 sea_query::Index::create()
                     .name("users_email")
@@ -41,13 +55,22 @@ impl MigrationTrait for Migration {
                     .col(User::Uid)
                     .to_owned(),
             )
+            .await?;
+        manager
+            .create_index(
+                sea_query::Index::create()
+                    .name("refresh_tokens_index")
+                    .table(RefreshTokenEntry::Table)
+                    .col(RefreshTokenEntry::RefreshToken)
+                    .to_owned(),
+            )
             .await
     }
-
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
             .drop_table(Table::drop().table(User::Table).to_owned())
-            .await
+            .await?;
+        manager.drop_table(Table::drop().table(RefreshTokenEntry::Table).to_owned()).await
     }
 }
 
@@ -64,5 +87,13 @@ enum User {
     LastLogin,
     Active,
     Metadata,
-    EmailVerified
+    EmailVerified,
+}
+
+#[derive(Iden)]
+enum RefreshTokenEntry {
+    #[iden = "refresh_tokens"]
+    Table,
+    Uid,
+    RefreshToken,
 }

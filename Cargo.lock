@@ -18,6 +18,7 @@ dependencies = [
  "env_logger",
  "hmac",
  "migration",
+ "rust-argon2",
  "sea-orm",
  "serde",
  "serde_json",
