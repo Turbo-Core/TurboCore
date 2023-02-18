@@ -1,5 +1,11 @@
 on: push
 name: Clippy check
+permissions:
+  checks: write
+  contents: read
+  statuses: write
+  
+  
 jobs:
   clippy_check:
     runs-on: ubuntu-latest
