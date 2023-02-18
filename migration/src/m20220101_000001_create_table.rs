@@ -34,6 +34,8 @@ impl MigrationTrait for Migration {
                             .string()
                             .not_null().primary_key(),
                     )
+                    .col(ColumnDef::new(RefreshTokenEntry::Expiry).date_time().not_null())
+                    .col(ColumnDef::new(RefreshTokenEntry::Used).boolean().not_null())
                     .to_owned(),
             )
             .await?;
@@ -96,4 +98,6 @@ enum RefreshTokenEntry {
     Table,
     Uid,
     RefreshToken,
+    Expiry,
+    Used
 }

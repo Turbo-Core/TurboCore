@@ -23,7 +23,7 @@ async fn main() -> std::io::Result<()> {
 
     let bind_addr = config.bind_addr.to_owned();
 
-    std::env::set_var("RUST_LOG", config.debug_level.to_owned());
+    std::env::set_var("RUST_LOG", &config.debug_level);
     env_logger::init();
 
     let connection = sea_orm::Database::connect(config.connection_url.to_owned())
@@ -40,7 +40,7 @@ async fn main() -> std::io::Result<()> {
             }))
             .wrap(middleware::DefaultHeaders::new().add((SERVER, "TurboCore")))
             .wrap(Logger::default())
-            .default_service(web::route().to(|| HttpResponse::NotFound())) // TODO: Implement 404 fn
+            .default_service(web::route().to(HttpResponse::NotFound)) // TODO: Implement 404 fn
             .configure(add_routes)
     })
     .bind(bind_addr)?
@@ -49,5 +49,7 @@ async fn main() -> std::io::Result<()> {
 }
 
 fn add_routes(cfg: &mut web::ServiceConfig) {
-    cfg.service(auth::signup::handler);
+    cfg.service(auth::signup::handler)
+        .service(auth::login::handler)
+        .service(auth::refresh::handler);
 }

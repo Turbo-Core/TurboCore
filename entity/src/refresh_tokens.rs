@@ -8,6 +8,8 @@ pub struct Model {
     pub uid: String,
     #[sea_orm(primary_key, auto_increment = false)]
     pub refresh_token: String,
+    pub expiry: DateTime,
+    pub used: bool,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

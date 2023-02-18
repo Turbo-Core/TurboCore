@@ -34,10 +34,7 @@ pub fn load_config() -> Config {
             Some(key) => Hmac::new_from_slice(key.as_bytes()).unwrap(),
             None => Hmac::new_from_slice(Uuid::new_v4().as_bytes()).unwrap(),
         },
-        bcrypt_cost: match json_config.bcrypt_cost {
-            Some(cost) => cost,
-            None => 12,
-        },
+        bcrypt_cost: json_config.bcrypt_cost.unwrap_or(12),
         debug_level: match json_config.debug_level {
             Some(level) => {
                 if level.eq_ignore_ascii_case("debug")
@@ -46,7 +43,7 @@ pub fn load_config() -> Config {
                 {
                     level
                 } else {
-                    panic!("Unsupported debug level: {}", level)
+                    panic!("Unsupported debug level: {level}")
                 }
             }
             None => "info".to_string(),

@@ -2,35 +2,14 @@ use actix_web::web::{Data, Json};
 use actix_web::{http, post, Responder};
 use argon2::{self, Config as ArgonConfig, ThreadMode, Variant, Version};
 use chrono::Utc;
-use entity::users;
-use jwt::SignWithKey;
+use entity::{users};
 use migration::{DbErr, OnConflict};
 use rand::{thread_rng, Rng};
 use sea_orm::{EntityTrait, Set};
-use serde::Serialize;
-use std::collections::BTreeMap;
+use crate::auth::{ApiResponse, util};
 use uuid::Uuid;
 
 use crate::AppState;
-
-#[derive(Debug, Serialize)]
-enum ApiResponse {
-    ApiError {
-        message: String,
-        error_code: String,
-    },
-    NoLoginResponse {
-        uid: String,
-    },
-    LoginResponse {
-        uid: String,
-        token: String,
-        expiry: u32,
-        refresh_token: String,
-        email_verified: bool,
-        metadata: String,
-    },
-}
 
 // TODO: Implement error handling: https://actix.rs/docs/extractors#json
 #[derive(serde::Deserialize)]
@@ -44,6 +23,7 @@ pub struct SignupBody {
 
 #[post("/api/auth/signup")]
 pub async fn handler(data: Data<AppState>, body: Json<SignupBody>) -> impl Responder {
+    // Get uid for new user
     let user_uid = Uuid::new_v4();
 
     let config = ArgonConfig {
@@ -91,29 +71,11 @@ pub async fn handler(data: Data<AppState>, body: Json<SignupBody>) -> impl Respo
     match res {
         Ok(_) => {
             if body.login {
-                let mut token = BTreeMap::new();
-                let mut refresh_token = BTreeMap::new();
-
-                // TODO: make exp configurable
-                // The RFC protocol allows for some lee way ("up to a few minutes") in exp, hence +15 seconds
-                let short_exp = Utc::now().timestamp() as u32 + 15 * 60 + 15;
-                let short_exp_str = short_exp.to_string();
-                let long_exp = (Utc::now().timestamp() + 60 * 60 * 24 * 7).to_string();
-
                 let uid_str = user_uid.to_string();
 
-                refresh_token.insert("iss", "TurboCore");
-                refresh_token.insert("exp", &long_exp);
-                refresh_token.insert("uid", &uid_str);
+                let (token_str, rt_str, short_exp) =
+                    util::get_at_and_rt(&data.connection, &uid_str, &data.config.secret_key).await;
 
-                token.insert("iss", "TurboCore");
-                token.insert("exp", &short_exp_str);
-                token.insert("uid", &uid_str);
-
-                let token_str = token.sign_with_key(&data.config.secret_key).unwrap();
-                let rt_str = refresh_token
-                    .sign_with_key(&data.config.secret_key)
-                    .unwrap();
                 (
                     Json(ApiResponse::LoginResponse {
                         uid: uid_str,
@@ -125,10 +87,9 @@ pub async fn handler(data: Data<AppState>, body: Json<SignupBody>) -> impl Respo
                     }),
                     http::StatusCode::CREATED,
                 )
-                // TODO: Add refresh token to database
             } else {
                 (
-                    Json(ApiResponse::NoLoginResponse {
+                    Json(ApiResponse::SignupResponse {
                         uid: user_uid.to_string(),
                     }),
                     http::StatusCode::CREATED,
@@ -137,15 +98,15 @@ pub async fn handler(data: Data<AppState>, body: Json<SignupBody>) -> impl Respo
         }
         Err(DbErr::RecordNotInserted) => (
             Json(ApiResponse::ApiError {
-                message: "This email is already in use.".to_string(),
-                error_code: "EMAIL_ALREADY_IN_USE".to_string(),
+                message: "This email is already in use.",
+                error_code: "EMAIL_ALREADY_IN_USE",
             }),
             http::StatusCode::CONFLICT,
         ),
         _ => (
             Json(ApiResponse::ApiError {
-                message: "Internal Server Error".to_string(),
-                error_code: "INTERNAL_ERROR".to_string(),
+                message: "Internal Server Error",
+                error_code: "INTERNAL_ERROR",
             }),
             http::StatusCode::INTERNAL_SERVER_ERROR,
         ),
