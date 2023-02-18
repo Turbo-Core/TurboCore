@@ -31,3 +31,4 @@ sea-orm = { version = "^0", features = [
     "with-uuid",
     "with-json",
 ] }
+
