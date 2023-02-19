@@ -32,9 +32,14 @@ impl MigrationTrait for Migration {
                     .col(
                         ColumnDef::new(RefreshTokenEntry::RefreshToken)
                             .string()
-                            .not_null().primary_key(),
+                            .not_null()
+                            .primary_key(),
                     )
-                    .col(ColumnDef::new(RefreshTokenEntry::Expiry).date_time().not_null())
+                    .col(
+                        ColumnDef::new(RefreshTokenEntry::Expiry)
+                            .date_time()
+                            .not_null(),
+                    )
                     .col(ColumnDef::new(RefreshTokenEntry::Used).boolean().not_null())
                     .to_owned(),
             )
@@ -72,7 +77,9 @@ impl MigrationTrait for Migration {
         manager
             .drop_table(Table::drop().table(User::Table).to_owned())
             .await?;
-        manager.drop_table(Table::drop().table(RefreshTokenEntry::Table).to_owned()).await
+        manager
+            .drop_table(Table::drop().table(RefreshTokenEntry::Table).to_owned())
+            .await
     }
 }
 
@@ -99,5 +106,5 @@ enum RefreshTokenEntry {
     Uid,
     RefreshToken,
     Expiry,
-    Used
+    Used,
 }

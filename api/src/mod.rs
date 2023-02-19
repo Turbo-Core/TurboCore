@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 pub mod auth;
 
@@ -9,7 +9,7 @@ pub struct Config {
     pub bcrypt_cost: u32,
     pub debug_level: String,
     pub bind_addr: String,
-    pub argon2_config: Argon2Config
+    pub argon2_config: Argon2Config,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -18,7 +18,7 @@ pub struct Argon2Config {
     pub memory: u32,
     pub iterations: u32,
     pub parallelism: u32,
-    pub tag_length: u32
+    pub tag_length: u32,
 }
 
 pub struct AppState {

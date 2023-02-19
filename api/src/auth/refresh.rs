@@ -12,7 +12,7 @@ use actix_web::{
 use chrono::Utc;
 use entity::refresh_tokens::{self, ActiveModel};
 use jwt::VerifyWithKey;
-use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, ModelTrait, QueryFilter, Set};
+use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, Set};
 use serde::Deserialize;
 use uuid::Uuid;
 
@@ -70,11 +70,7 @@ pub async fn handler(data: Data<AppState>, body: Json<RefreshBody>) -> impl Resp
                 Some(rt) => {
                     if rt.used {
                         // Again, revoke all RTs, it has been used
-                        let uid = Uuid::from_str(&uid).unwrap();
-                        refresh_tokens::Entity::delete_many()
-                            .filter(refresh_tokens::Column::Uid.eq(uid))
-                            .exec(&data.connection)
-                            .await;
+                        delete_old_rt(&uid, &data.connection).await;
                         return (
                             Json(ApiResponse::ApiError {
                                 message:
@@ -89,39 +85,50 @@ pub async fn handler(data: Data<AppState>, body: Json<RefreshBody>) -> impl Resp
                         // First, mark the old token as used
                         let mut rt_update: ActiveModel = rt.into();
                         rt_update.used = Set(true);
-                        rt_update.update(&data.connection).await;
+                        match rt_update.update(&data.connection).await {
+                            Ok(_) => (),
+                            Err(_) => log::error!("Failed to mark refresh token as used"),
+                        }
 
                         // Here is the only time we issue a new token, when not expired, and not used
-                        let (at, rt, exp) =
+                        let (access_token, refresh_token, expiry) =
                             get_at_and_rt(&data.connection, &uid, &data.config.secret_key).await;
 
                         return (
                             Json(ApiResponse::RefreshResponse {
-                                uid: uid,
-                                access_token: at,
-                                refresh_token: rt,
-                                expiry: exp,
+                                uid,
+                                access_token,
+                                refresh_token,
+                                expiry,
                             }),
                             http::StatusCode::OK,
                         );
                     }
                 }
                 None => {
-                    // RT is not in DB, likely very old, all RTs should be revoked
-                    let uid = Uuid::from_str(&uid).unwrap();
-                    refresh_tokens::Entity::delete_many()
-                        .filter(refresh_tokens::Column::Uid.eq(uid))
-                        .exec(&data.connection)
-                        .await;
+                    delete_old_rt(&uid, &data.connection).await;
                 }
             }
         }
     }
-    return (
+    (
         Json(ApiResponse::ApiError {
             message: "The JWT provided has already expired. Please log in again",
             error_code: "EXPIRED_JWT",
         }),
         http::StatusCode::UNAUTHORIZED,
-    );
+    )
+}
+
+async fn delete_old_rt(uid: &str, connection: &DatabaseConnection) {
+    // RT is not in DB, likely very old, all RTs should be revoked
+    let uid = Uuid::from_str(uid).unwrap();
+    match refresh_tokens::Entity::delete_many()
+        .filter(refresh_tokens::Column::Uid.eq(uid))
+        .exec(connection)
+        .await
+    {
+        Ok(_) => (),
+        Err(e) => log::error!("Failed to delete old refresh tokens: {}", e.to_string()),
+    }
 }

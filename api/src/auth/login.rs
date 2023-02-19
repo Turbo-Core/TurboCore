@@ -42,7 +42,7 @@ pub async fn handler(data: Data<AppState>, body: Json<LoginBody>) -> impl Respon
                     let uid_str = &user.uid.to_string();
                     let (at, rt, exp) =
                         get_at_and_rt(&data.connection, uid_str, &data.config.secret_key).await;
-                    return (
+                    (
                         Json(ApiResponse::LoginResponse {
                             uid: uid_str.to_string(),
                             token: at,
@@ -52,29 +52,27 @@ pub async fn handler(data: Data<AppState>, body: Json<LoginBody>) -> impl Respon
                             metadata: user.metadata.clone().unwrap_or("".to_string()),
                         }),
                         http::StatusCode::OK,
-                    );
-                },
+                    )
+                }
                 // User is not found
                 None => {
-                    return (
+                    (
                         Json(ApiResponse::ApiError {
                             message: "The email or password is invalid",
                             error_code: "INVALID_CREDENTIALS",
                         }),
                         http::StatusCode::UNAUTHORIZED,
-                    );
+                    )
                 }
             }
-        },
-        // Some DBErr occurred. TODO: handle this
-        Err(_) => {
-            (
-                Json(ApiResponse::ApiError {
-                    message: "Internal server error.",
-                    error_code: "INTERNAL_SERVER_ERROR",
-                }),
-                http::StatusCode::INTERNAL_SERVER_ERROR,
-            )
         }
+        // Some DBErr occurred. TODO: handle this
+        Err(_) => (
+            Json(ApiResponse::ApiError {
+                message: "Internal server error.",
+                error_code: "INTERNAL_SERVER_ERROR",
+            }),
+            http::StatusCode::INTERNAL_SERVER_ERROR,
+        ),
     }
 }

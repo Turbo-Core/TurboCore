@@ -1,8 +1,8 @@
 use serde::Serialize;
 
-pub mod signup;
 pub mod login;
 pub mod refresh;
+pub mod signup;
 pub mod util;
 
 #[derive(Debug, Serialize)]
@@ -17,7 +17,7 @@ pub enum ApiResponse<'a> {
     LoginResponse {
         uid: String,
         token: String,
-        expiry: u32,
+        expiry: i64,
         refresh_token: String,
         email_verified: bool,
         metadata: String,
@@ -26,6 +26,6 @@ pub enum ApiResponse<'a> {
         uid: String,
         access_token: String,
         refresh_token: String,
-        expiry: u32
-    }
+        expiry: i64,
+    },
 }

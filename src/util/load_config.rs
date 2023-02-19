@@ -1,4 +1,4 @@
-use api::{Config, Argon2Config};
+use api::{Argon2Config, Config};
 use hmac::{Hmac, Mac};
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -13,7 +13,7 @@ pub struct ConfigInternal {
     pub bcrypt_cost: Option<u32>,
     pub debug_level: Option<String>,
     pub bind_addr: Option<String>,
-    pub argon2_params: Option<Argon2Config>
+    pub argon2_params: Option<Argon2Config>,
 }
 
 fn verify_connection_url(url: &str) -> bool {
@@ -58,10 +58,10 @@ pub fn load_config() -> Config {
                 salt_length: 16,
                 memory: 65536,
                 iterations: 4,
-                parallelism: std::thread::available_parallelism().unwrap().get() as u32/2,
-                tag_length: 32
-            }
-        }
+                parallelism: std::thread::available_parallelism().unwrap().get() as u32 / 2,
+                tag_length: 32,
+            },
+        },
     };
 
     if !verify_connection_url(&config.connection_url) {

@@ -4,14 +4,14 @@ mod util;
 
 // Internal
 use api::{auth, AppState};
-use util::load_config::{load_config};
+use util::load_config::load_config;
 
 // Actix
 use actix_web::{
     http::header::SERVER,
     middleware::{self, Logger},
     web::{self, Data},
-    App, HttpResponse, HttpServer,
+    App, HttpServer,
 };
 
 // Sea-ORM
@@ -40,7 +40,6 @@ async fn main() -> std::io::Result<()> {
             }))
             .wrap(middleware::DefaultHeaders::new().add((SERVER, "TurboCore")))
             .wrap(Logger::default())
-            .default_service(web::route().to(HttpResponse::NotFound)) // TODO: Implement 404 fn
             .configure(add_routes)
     })
     .bind(bind_addr)?

@@ -1,12 +1,11 @@
-use actix_web::web::{Data, Json};
-use actix_web::{http, post, Responder};
+use crate::auth::{util, ApiResponse};
+use actix_web::{http, post, Responder, web::{Data, Json}};
 use argon2::{self, Config as ArgonConfig, ThreadMode, Variant, Version};
 use chrono::Utc;
-use entity::{users};
+use entity::users;
 use migration::{DbErr, OnConflict};
 use rand::{thread_rng, Rng};
 use sea_orm::{EntityTrait, Set};
-use crate::auth::{ApiResponse, util};
 use uuid::Uuid;
 
 use crate::AppState;
