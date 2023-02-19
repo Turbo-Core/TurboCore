@@ -32,5 +32,5 @@ sea-orm = { version = "^0", features = [
 ] }
 rust-argon2 = "1.0.0"
 rand = "0.8.5"
-# TODO: Use current versions of below:
-chrono = "0.4"
+log = "0.4.17"
+chrono = {version = "0.4.23", default-features = false, features = ["serde"]}
