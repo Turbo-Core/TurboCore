@@ -5,18 +5,18 @@ import { Callout } from 'nextra-theme-docs'
 # REST Endpoints
 
 ## Introduction
-It's reccommended to use one of the client libraries, but if for some reason you can't use them, TurboCore provides a REST API for authentication. You can use this API to sign up, sign in, and log out users. You can also use this API to get a user's information and refresh their JWT token.
+It's recommended to use one of the client libraries, but if for some reason you can't use them, TurboCore provides a REST API for authentication. You can use this API to sign up, sign in, and log out users. You can also use this API to get a user's information and refresh their JWT token.
 
 <Callout emoji='ℹ️' type='info'>
     Endpoints that require authentication will be marked with a 🔒. See [Using the REST API](/using-the-api) for more information.
 </Callout>
 
 ## GET /api/auth/user 🔒
-You can get a user's information by sending a GET request to the /api/auth/user endpoint.
+You can get a user's information by sending a GET request to the ```/api/auth/user``` endpoint.
 
 **Method:** GET
 
-**Endpoint:** /api/auth/get-user
+**Endpoint:** ```/api/auth/get-user```
 
 **Request Body:** None
 
@@ -25,7 +25,7 @@ You can get a user's information by sending a GET request to the /api/auth/user 
 | --- | --- | --- |
 | uid | string | The UID of the user |
 | email | string | The email of the user |
-| emailVerified | boolean | Whether the user's email is verified |
+| email_verified | boolean | Whether the user's email is verified |
 | metadata | object | A JSON object containing any additional metadata you want to store with the user |
 
 **Example response:**
@@ -33,7 +33,7 @@ You can get a user's information by sending a GET request to the /api/auth/user 
 {
     "uid": "710f7e29-4082-4421-b9b5-49f56a393832",
     "email": "mail@example.com",
-    "emailVerified": true,
+    "email_verified": true,
     "metadata": {
         "role": "admin",
         "name": "John Doe",
@@ -47,12 +47,12 @@ You can get a user's information by sending a GET request to the /api/auth/user 
 - **USER_NOT_FOUND:** The user was not found
 
 
-## POST /api/auth/login
-You can sign in a user by sending a POST request to the /api/auth/login endpoint. 
+## POST /api/auth/user/login
+You can sign in a user by sending a POST request to the ```/api/auth/user/login``` endpoint. 
 
 **Method:** POST
 
-**Endpoint:** /api/auth/login
+**Endpoint:** ```/api/auth/user/login```
 
 **Request Body:**
 | Property Name | Type | Description |
@@ -90,12 +90,12 @@ You can sign in a user by sending a POST request to the /api/auth/login endpoint
 - **INVALID_CREDENTIALS:** The email or password is invalid
 - **USER_DISABLED:** The user has been disabled by an administrator
 
-## POST /api/auth/signup
-You can sign up a user by sending a POST request to the /api/auth/signup endpoint.
+## POST /api/auth/user/create
+You can create a user by sending a POST request to the ```/api/auth/user/create``` endpoint.
 
 **Method:** POST
 
-**Endpoint:** /api/auth/signup
+**Endpoint:** ```/api/auth/user/create```
 
 **Request Body:**
 | Property Name | Type | Description |
@@ -125,12 +125,12 @@ You can sign up a user by sending a POST request to the /api/auth/signup endpoin
 - **WEAK_PASSWORD:** The password is too weak
 
 
-## POST /api/auth/refresh 🔒
-You can refresh a user's JWT token by sending a POST request to the /api/auth/refresh endpoint.
+## POST /api/auth/user/refresh 
+You can refresh a user's JWT token by sending a POST request to the ```/api/auth/user/refresh``` endpoint.
 
 **Method:** POST
 
-**Endpoint:** /api/auth/refresh
+**Endpoint:** ```/api/auth/user/refresh```
 
 **Request Body:**
 | Property Name | Type | Description |
@@ -158,12 +158,12 @@ You can refresh a user's JWT token by sending a POST request to the /api/auth/re
 **Common Errors:**
 - **INVALID_REFRESH_TOKEN:** The refresh token is invalid
 
-## POST /api/auth/logout 🔒
-You can log out a user by sending a POST request to the /api/auth/logout endpoint.
+## POST /api/auth/user/logout 🔒
+You can sign out a user by sending a POST request to the ```/api/auth/user/logout``` endpoint.
 
 **Method:** POST
 
-**Endpoint:** /api/auth/logout
+**Endpoint:** /api/auth/user/logout
 
 **Request Body:** None
 
@@ -171,6 +171,7 @@ You can log out a user by sending a POST request to the /api/auth/logout endpoin
 
 **Common Errors:**
 - **NOT_AUTHENTICATED:** The user is not signed in
+
 
 ## POST /api/auth/magic-link
 You can send a magic link to a user by sending a POST request to the /api/auth/magic-link endpoint. The user will be redirected to the URL specified in the continueUrl parameter after they sign in.
@@ -198,13 +199,13 @@ You can send a magic link to a user by sending a POST request to the /api/auth/m
 **Common Errors:**
 - **INVALID_EMAIL:** The email is invalid
 - **USER_NOT_FOUND:** The user was not found
-
-## POST /api/auth/verify-email 🔒
-You can verify a user's email by sending a POST request to the /api/auth/verify-email endpoint. This will send a verification email to the user's email address.
+⚠️
+## POST /api/auth/user/verify-email 🔒
+You can verify a user's email by sending a POST request to the ```/api/auth/user/verify-email``` endpoint. This will send a verification email to the user's email address.
 
 **Method:** POST
 
-**Endpoint:** /api/auth/verify-email
+**Endpoint:** ```/api/auth/user/verify-email```
 
 **Request Body:** None
 
@@ -216,12 +217,12 @@ You can verify a user's email by sending a POST request to the /api/auth/verify-
 - **INVALID_EMAIL:** The email is invalid
 - **USER_NOT_FOUND:** The user was not found
 
-## POST /api/auth/change-password 🔒
-You can change a user's password by sending a POST request to the /api/auth/change-password endpoint.
+## PATCH /api/auth/user/change-password 🔒
+You can change a user's password by sending a PATCH request to the ```/api/auth/user/change-password``` endpoint.
 
-**Method:** POST
+**Method:** PATCH
 
-**Endpoint:** /api/auth/change-password
+**Endpoint:** ```/api/auth/user/change-password```
 
 **Request Body:**
 | Property Name | Type | Description |
@@ -238,11 +239,11 @@ You can change a user's password by sending a POST request to the /api/auth/chan
 - **WEAK_PASSWORD:** The new password is too weak
 
 ## POST /api/auth/reset-password
-You can reset a user's password by sending a POST request to the /api/auth/reset-password endpoint. This will send a password reset email to the user's email address. **For security, this endpoint does not return an error if the email is not found.**
+You can reset a user's password by sending a POST request to the ```/api/auth/reset-password``` endpoint. This will send a password reset email to the user's email address. **For security, this endpoint does not return an error if the email is not found.**
 
 **Method:** POST
 
-**Endpoint:** /api/auth/reset-password
+**Endpoint:** ```/api/auth/reset-password```
 
 **Request Body:**
 | Property Name | Type | Description |
@@ -251,12 +252,12 @@ You can reset a user's password by sending a POST request to the /api/auth/reset
 
 **Response Body:** None
 
-## POST /api/auth/update-user 🔒
-You can update a user's email or metadata by sending a POST request to the /api/auth/update-user endpoint.
+## PUT /api/auth/user 🔒
+You can update a user's email or metadata by sending a PUT request to the ```/api/auth/user``` endpoint.
 
-**Method:** POST
+**Method:** PUT
 
-**Endpoint:** /api/auth/update-user
+**Endpoint:** ```/api/auth/user```
 
 **Request Body:**
 | Property Name | Type | Description |
@@ -271,12 +272,12 @@ You can update a user's email or metadata by sending a POST request to the /api/
 - **EMAIL_ALREADY_IN_USE:** The email is already in use
 - **INVALID_EMAIL:** The email is invalid
 
-## DELETE /api/auth/delete-user 🔒
-You can delete a user by sending a DELETE request to the /api/auth/delete-user endpoint.
+## DELETE /api/auth/user 🔒
+You can delete a user by sending a DELETE request to the ```/api/auth/user``` endpoint.
 
 **Method:** DELETE
 
-**Endpoint:** /api/auth/delete-user
+**Endpoint:** ```/api/auth/user```
 
 **Request Body:** None
 
