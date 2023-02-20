@@ -15,6 +15,7 @@ use jwt::VerifyWithKey;
 use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, Set};
 use serde::Deserialize;
 use uuid::Uuid;
+use log::error;
 
 #[derive(Deserialize)]
 pub struct RefreshBody {
@@ -56,6 +57,7 @@ pub async fn handler(data: Data<AppState>, body: Json<RefreshBody>) -> impl Resp
                     .unwrap();
             }
             _ => {
+                error!("Database error: {}", err.to_string());
                 return (
                     Json(ApiResponse::ApiError {
                         message: "Internal Server Error",
@@ -106,6 +108,7 @@ pub async fn handler(data: Data<AppState>, body: Json<RefreshBody>) -> impl Resp
                     }
                 }
                 None => {
+                    // Record not found, revoke all RTs
                     delete_old_rt(&uid, &data.connection).await;
                 }
             }
@@ -122,7 +125,6 @@ pub async fn handler(data: Data<AppState>, body: Json<RefreshBody>) -> impl Resp
 
 async fn delete_old_rt(uid: &str, connection: &DatabaseConnection) {
     // RT is not in DB, likely very old, all RTs should be revoked
-    let uid = Uuid::from_str(uid).unwrap();
     match refresh_tokens::Entity::delete_many()
         .filter(refresh_tokens::Column::Uid.eq(uid))
         .exec(connection)
