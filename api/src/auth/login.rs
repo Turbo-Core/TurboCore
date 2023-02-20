@@ -18,7 +18,7 @@ pub struct LoginBody {
     password: String,
 }
 
-#[post("/api/auth/login")]
+#[post("/api/auth/user/login")]
 pub async fn handler(data: Data<AppState>, body: Json<LoginBody>) -> impl Responder {
     let user_res = users::Entity::find()
         .filter(users::Column::Email.eq(&body.email))

@@ -28,7 +28,7 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(RefreshTokenEntry::Table)
                     .if_not_exists()
-                    .col(ColumnDef::new(RefreshTokenEntry::Uid).string().not_null())
+                    .col(ColumnDef::new(RefreshTokenEntry::Uid).uuid().not_null())
                     .col(
                         ColumnDef::new(RefreshTokenEntry::RefreshToken)
                             .string()

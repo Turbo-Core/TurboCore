@@ -50,5 +50,6 @@ async fn main() -> std::io::Result<()> {
 fn add_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(auth::signup::handler)
         .service(auth::login::handler)
-        .service(auth::refresh::handler);
+        .service(auth::refresh::handler)
+        .service(auth::get_user::handler);
 }

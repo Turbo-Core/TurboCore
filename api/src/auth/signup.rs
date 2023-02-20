@@ -20,7 +20,7 @@ pub struct SignupBody {
     metadata: String,
 }
 
-#[post("/api/auth/signup")]
+#[post("/api/auth/user/create")]
 pub async fn handler(data: Data<AppState>, body: Json<SignupBody>) -> impl Responder {
     // Get uid for new user
     let user_uid = Uuid::new_v4();
