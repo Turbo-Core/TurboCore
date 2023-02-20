@@ -124,7 +124,7 @@ pub async fn handler(data: Data<AppState>, body: Json<RefreshBody>) -> impl Resp
 }
 
 async fn delete_old_rt(uid: &str, connection: &DatabaseConnection) {
-    let uid = Uuid::from_str(&uid).unwrap();
+    let uid = Uuid::from_str(uid).unwrap();
     // RT is not in DB, likely very old, all RTs should be revoked
     match refresh_tokens::Entity::delete_many()
         .filter(refresh_tokens::Column::Uid.eq(uid))

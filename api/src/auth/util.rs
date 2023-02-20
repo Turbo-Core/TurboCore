@@ -3,7 +3,8 @@ use entity::refresh_tokens;
 use jwt::SignWithKey;
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use sea_orm::{DatabaseConnection, EntityTrait, Set};
-use std::collections::BTreeMap;
+use uuid::Uuid;
+use std::{collections::BTreeMap, str::FromStr};
 
 /// Generates a JWT access token and a JWT refresh token, and expiry for the AT.
 /// Returns the value as a tuple and store the refresh token in the database
@@ -42,7 +43,7 @@ pub async fn get_at_and_rt(
 
     // Add new one
     refresh_tokens::Entity::insert(refresh_tokens::ActiveModel {
-        uid: Set(uid.to_string()),
+        uid: Set(Uuid::from_str(uid).unwrap()),
         refresh_token: Set(rt.to_owned()),
         expiry: Set(NaiveDateTime::from_timestamp_opt(long_exp, 0).unwrap()),
         used: Set(false),
