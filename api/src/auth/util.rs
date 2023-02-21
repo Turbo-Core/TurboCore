@@ -1,8 +1,11 @@
+use actix_web::{http::header::HeaderValue};
 use chrono::{NaiveDateTime, Utc};
 use entity::refresh_tokens;
-use jwt::SignWithKey;
+use hmac::Hmac;
+use jwt::{SignWithKey, VerifyWithKey};
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use sea_orm::{DatabaseConnection, EntityTrait, Set};
+use sha2::Sha256;
 use uuid::Uuid;
 use std::{collections::BTreeMap, str::FromStr};
 
@@ -53,4 +56,58 @@ pub async fn get_at_and_rt(
     .unwrap();
 
     (token.sign_with_key(key).unwrap(), rt, short_exp)
+}
+
+pub fn verify_header(auth_header: Option<&HeaderValue>, secret_key: &Hmac<Sha256>) -> HeaderResult {
+    let authorization = match auth_header {
+        Some(a) => {
+            match a.to_str() {
+                Ok(s) => s,
+                Err(_e) => {
+                    // The request contains headers with opaque bytes.
+                    // TODO: Log this
+                    return HeaderResult::BadFormat;
+                }
+            }
+        }
+        None => {
+            return HeaderResult::MissingHeader;
+        }
+    };
+
+    let parts: Vec<&str> = authorization.split_whitespace().collect();
+    if parts[0] != "Bearer" && parts[0] != "bearer" {
+        return HeaderResult::BadFormat;
+    }
+    let token = match parts.get(1) {
+        Some(token) => *token,
+        None => {
+            return HeaderResult::BadFormat;
+        }
+    };
+
+    let claims: BTreeMap<String, String> = match token.verify_with_key(secret_key) {
+        Ok(c) => c,
+        Err(_) => {
+            return HeaderResult::Unverifiable;
+        }
+    };
+
+    if Utc::now().timestamp() > claims.get("exp").unwrap().parse().unwrap() {
+        return HeaderResult::ExpiredToken;
+    }
+
+    let uid = &claims.get("uid").unwrap()[..];
+
+    HeaderResult::Uid(Uuid::from_str(uid).unwrap())
+}
+
+
+
+pub enum HeaderResult {
+    ExpiredToken,
+    BadFormat,
+    MissingHeader,
+    Unverifiable,
+    Uid(Uuid)
 }

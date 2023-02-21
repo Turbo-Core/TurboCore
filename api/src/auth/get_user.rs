@@ -1,63 +1,23 @@
-use std::{collections::BTreeMap, str::FromStr};
-
 use crate::{auth::ApiResponse, AppState};
 use actix_web::{
     get, http,
     web::{Data, Json},
     Responder,
 };
-use chrono::Utc;
 use entity::users;
-use jwt::VerifyWithKey;
 use log::info;
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
-use uuid::Uuid;
+use crate::auth::util;
+
+use super::util::HeaderResult;
 
 #[get("/api/auth/user")]
 pub async fn handler(request: actix_web::HttpRequest, data: Data<AppState>) -> impl Responder {
     let header_map = request.headers();
     let authorization = header_map.get("Authorization");
 
-    let authorization = match authorization {
-        Some(a) => {
-            match a.to_str() {
-                Ok(s) => s,
-                Err(_e) => {
-                    // TODO: Should this be logged? See [ToStrError]
-                    return (
-                        Json(ApiResponse::ApiError {
-                            message: "The request contains headers with opaque bytes.",
-                            error_code: "BAD_HEADER",
-                        }),
-                        http::StatusCode::BAD_REQUEST,
-                    );
-                }
-            }
-        }
-        None => {
-            return (
-                Json(ApiResponse::ApiError {
-                    message: "The request is missing an 'Authorization' header",
-                    error_code: "NOT_AUTHENTICATED",
-                }),
-                http::StatusCode::UNAUTHORIZED,
-            )
-        }
-    };
-
-    let parts: Vec<&str> = authorization.split_whitespace().collect();
-    if parts[0] != "Bearer" && parts[0] != "bearer" {
-        return (
-            Json(ApiResponse::ApiError {
-                message: "The 'Authorization' header is improperly formatted",
-                error_code: "BAD_HEADER",
-            }),
-            http::StatusCode::BAD_REQUEST,
-        );
-    }
-    let token = match parts.get(1) {
-        Some(token) => *token,
-        None => {
+    let uid = match util::verify_header(authorization, &data.config.secret_key) {
+        HeaderResult::BadFormat => {
             return (
                 Json(ApiResponse::ApiError {
                     message: "The 'Authorization' header is improperly formatted",
@@ -65,12 +25,26 @@ pub async fn handler(request: actix_web::HttpRequest, data: Data<AppState>) -> i
                 }),
                 http::StatusCode::BAD_REQUEST,
             );
-        }
-    };
-
-    let claims: BTreeMap<String, String> = match token.verify_with_key(&data.config.secret_key) {
-        Ok(c) => c,
-        Err(_) => {
+        },
+        HeaderResult::ExpiredToken => {
+            return (
+                Json(ApiResponse::ApiError {
+                    message: "The JWT has already expired",
+                    error_code: "BAD_TOKEN",
+                }),
+                http::StatusCode::UNAUTHORIZED,
+            );
+        },
+        HeaderResult::MissingHeader => {
+            return (
+                Json(ApiResponse::ApiError {
+                    message: "The request is missing an 'Authorization' header",
+                    error_code: "NOT_AUTHENTICATED",
+                }),
+                http::StatusCode::UNAUTHORIZED,
+);
+        },
+        HeaderResult::Unverifiable => {
             return (
                 Json(ApiResponse::ApiError {
                     message: "The JWT could not be verified by the server",
@@ -78,24 +52,10 @@ pub async fn handler(request: actix_web::HttpRequest, data: Data<AppState>) -> i
                 }),
                 http::StatusCode::UNAUTHORIZED,
             );
-        }
+        },
+        HeaderResult::Uid(uid) => uid
     };
 
-    if Utc::now().timestamp() > claims.get("exp").unwrap().parse().unwrap() {
-        return (
-            Json(ApiResponse::ApiError {
-                message: "The JWT has already expired",
-                error_code: "BAD_TOKEN",
-            }),
-            http::StatusCode::UNAUTHORIZED,
-        );
-    }
-
-    let uid = &claims.get("uid").unwrap()[..];
-
-    let uid = Uuid::from_str(uid).unwrap();
-
-    // Wow that was a lot of checks. If they all passed, then return the user's information
     let user = users::Entity::find()
         .filter(users::Column::Uid.eq(uid))
         .one(&data.connection)
