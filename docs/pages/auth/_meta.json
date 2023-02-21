@@ -1,9 +1,0 @@
-{
-    "js": "JavaScript Client",
-    "cpp": "C++ Client",
-    "java": "Java Client",
-    "swift": "Swift Client",
-    "python": "Python Client",
-    "rest": "REST Endpoints"
-
-}

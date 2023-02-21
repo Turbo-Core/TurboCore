@@ -1,5 +1,4 @@
-docs/.next
-docs/node_modules
+.DS_Store
 /target
 config.json
 .vscode
