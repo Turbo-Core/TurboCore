@@ -14,6 +14,21 @@ pub struct ConfigInternal {
     pub debug_level: Option<String>,
     pub bind_addr: Option<String>,
     pub argon2_params: Option<Argon2Config>,
+    pub email: Option<EmailConfig>
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct EmailConfig {
+    smtp_server: String,
+    smtp_port: u32,
+    smtp_username: String,
+    smtp_password: String,
+    smtp_encryption: String,
+    from: String,
+    reply_to: String,
+    magic_link_subject: Option<String>,
+    forgot_password_subject: Option<String>,
+    confirmation_subject: Option<String>
 }
 
 fn verify_connection_url(url: &str) -> bool {

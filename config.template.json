@@ -1,6 +1,6 @@
 {
     "connection_url": "sqlite::memory:",
-    "secret_key": "8a730530-6fde-46e7-a4f1-3ea18ab97840",
+    "secret_key": "a_super_secret_key. Use: 'openssl rand -hex 32' to generate one",
     "debug_level": "info",
     "bind_addr": "0.0.0.0:8080",
     "argon2_params": {
@@ -9,5 +9,17 @@
         "iterations": 4,
         "parallelism": 2,
         "tag_length": 32
+    },
+    "email": {
+        "smtp_server": "smtp.gmail.com",
+        "smtp_port": 587,
+        "smtp_username": "",
+        "smtp_password": "a_super_secret_password",
+        "smtp_encryption": "STARTTLS",
+        "from": "Name <email@example.com>",
+        "reply_to": "No Reply <no-reply@example>",
+        "magic_link_subject": "Magic link",
+        "forgot_password_subject": "Forgot password",
+        "confirmation_subject": "Email confirmation"
     }
 }
