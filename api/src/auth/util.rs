@@ -63,7 +63,7 @@ pub async fn get_at_and_rt(
     (token.sign_with_key(key).unwrap(), rt, short_exp)
 }
 
-pub fn verify_header<'a>(
+pub fn verify_header (
     auth_header: Option<&HeaderValue>,
     secret_key: &Hmac<Sha256>,
 ) -> HeaderResult {

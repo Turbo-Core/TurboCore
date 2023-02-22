@@ -10,6 +10,7 @@
         "parallelism": 2,
         "tag_length": 32
     },
+    "minimum_password_strength": 1,
     "email": {
         "smtp_server": "smtp.gmail.com",
         "smtp_port": 587,
