@@ -17,42 +17,9 @@ pub async fn handler(request: actix_web::HttpRequest, data: Data<AppState>) -> i
     let authorization = header_map.get("Authorization");
 
     let uid = match util::verify_header(authorization, &data.config.secret_key) {
-        HeaderResult::BadFormat => {
-            return (
-                Json(ApiResponse::ApiError {
-                    message: "The 'Authorization' header is improperly formatted",
-                    error_code: "BAD_HEADER",
-                }),
-                http::StatusCode::BAD_REQUEST,
-            );
-        },
-        HeaderResult::ExpiredToken => {
-            return (
-                Json(ApiResponse::ApiError {
-                    message: "The JWT has already expired",
-                    error_code: "BAD_TOKEN",
-                }),
-                http::StatusCode::UNAUTHORIZED,
-            );
-        },
-        HeaderResult::MissingHeader => {
-            return (
-                Json(ApiResponse::ApiError {
-                    message: "The request is missing an 'Authorization' header",
-                    error_code: "NOT_AUTHENTICATED",
-                }),
-                http::StatusCode::UNAUTHORIZED,
-);
-        },
-        HeaderResult::Unverifiable => {
-            return (
-                Json(ApiResponse::ApiError {
-                    message: "The JWT could not be verified by the server",
-                    error_code: "BAD_TOKEN",
-                }),
-                http::StatusCode::UNAUTHORIZED,
-            );
-        },
+        HeaderResult::Error(r, s) => {
+            return (r, s);
+        }
         HeaderResult::Uid(uid) => uid
     };
 

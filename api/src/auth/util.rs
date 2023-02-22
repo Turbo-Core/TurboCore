@@ -1,4 +1,7 @@
-use actix_web::{http::header::HeaderValue};
+use actix_web::{
+    http::{self, header::HeaderValue, StatusCode},
+    web::Json,
+};
 use chrono::{NaiveDateTime, Utc};
 use entity::refresh_tokens;
 use hmac::Hmac;
@@ -6,8 +9,10 @@ use jwt::{SignWithKey, VerifyWithKey};
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use sea_orm::{DatabaseConnection, EntityTrait, Set};
 use sha2::Sha256;
-use uuid::Uuid;
 use std::{collections::BTreeMap, str::FromStr};
+use uuid::Uuid;
+
+use super::ApiResponse;
 
 /// Generates a JWT access token and a JWT refresh token, and expiry for the AT.
 /// Returns the value as a tuple and store the refresh token in the database
@@ -58,7 +63,10 @@ pub async fn get_at_and_rt(
     (token.sign_with_key(key).unwrap(), rt, short_exp)
 }
 
-pub fn verify_header(auth_header: Option<&HeaderValue>, secret_key: &Hmac<Sha256>) -> HeaderResult {
+pub fn verify_header<'a>(
+    auth_header: Option<&HeaderValue>,
+    secret_key: &Hmac<Sha256>,
+) -> HeaderResult<'a> {
     let authorization = match auth_header {
         Some(a) => {
             match a.to_str() {
@@ -66,35 +74,71 @@ pub fn verify_header(auth_header: Option<&HeaderValue>, secret_key: &Hmac<Sha256
                 Err(_e) => {
                     // The request contains headers with opaque bytes.
                     // TODO: Log this
-                    return HeaderResult::BadFormat;
+                    return HeaderResult::Error(
+                        Json(ApiResponse::ApiError {
+                            message: "The 'Authorization' header is improperly formatted",
+                            error_code: "BAD_HEADER",
+                        }),
+                        http::StatusCode::BAD_REQUEST,
+                    );
                 }
             }
         }
         None => {
-            return HeaderResult::MissingHeader;
+            return HeaderResult::Error(
+                Json(ApiResponse::ApiError {
+                    message: "The request is missing an 'Authorization' header",
+                    error_code: "NOT_AUTHENTICATED",
+                }),
+                http::StatusCode::UNAUTHORIZED,
+            );
         }
     };
 
     let parts: Vec<&str> = authorization.split_whitespace().collect();
     if parts[0] != "Bearer" && parts[0] != "bearer" {
-        return HeaderResult::BadFormat;
+        return HeaderResult::Error(
+            Json(ApiResponse::ApiError {
+                message: "The 'Authorization' header is improperly formatted",
+                error_code: "BAD_HEADER",
+            }),
+            http::StatusCode::BAD_REQUEST,
+        );
     }
     let token = match parts.get(1) {
         Some(token) => *token,
         None => {
-            return HeaderResult::BadFormat;
+            return HeaderResult::Error(
+                Json(ApiResponse::ApiError {
+                    message: "The 'Authorization' header is improperly formatted",
+                    error_code: "BAD_HEADER",
+                }),
+                http::StatusCode::BAD_REQUEST,
+            );
         }
     };
 
     let claims: BTreeMap<String, String> = match token.verify_with_key(secret_key) {
         Ok(c) => c,
         Err(_) => {
-            return HeaderResult::Unverifiable;
+            return HeaderResult::Error(
+                Json(ApiResponse::ApiError {
+                    message: "The JWT could not be verified by the server",
+                    error_code: "BAD_TOKEN",
+                }),
+                http::StatusCode::UNAUTHORIZED,
+            );
         }
     };
 
     if Utc::now().timestamp() > claims.get("exp").unwrap().parse().unwrap() {
-        return HeaderResult::ExpiredToken;
+        return HeaderResult::Error(
+            Json(ApiResponse::ApiError {
+                message: "The JWT has already expired",
+                error_code: "BAD_TOKEN",
+            }),
+            http::StatusCode::UNAUTHORIZED,
+        );
     }
 
     let uid = &claims.get("uid").unwrap()[..];
@@ -102,12 +146,7 @@ pub fn verify_header(auth_header: Option<&HeaderValue>, secret_key: &Hmac<Sha256
     HeaderResult::Uid(Uuid::from_str(uid).unwrap())
 }
 
-
-
-pub enum HeaderResult {
-    ExpiredToken,
-    BadFormat,
-    MissingHeader,
-    Unverifiable,
-    Uid(Uuid)
+pub enum HeaderResult<'a> {
+    Error(Json<ApiResponse<'a>>, StatusCode),
+    Uid(Uuid),
 }
