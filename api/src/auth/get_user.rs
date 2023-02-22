@@ -1,3 +1,4 @@
+use crate::auth::util;
 use crate::{auth::ApiResponse, AppState};
 use actix_web::{
     get, http,
@@ -6,8 +7,7 @@ use actix_web::{
 };
 use entity::users;
 use log::info;
-use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
-use crate::auth::util;
+use sea_orm::EntityTrait;
 
 use super::util::HeaderResult;
 
@@ -20,13 +20,10 @@ pub async fn handler(request: actix_web::HttpRequest, data: Data<AppState>) -> i
         HeaderResult::Error(r, s) => {
             return (r, s);
         }
-        HeaderResult::Uid(uid) => uid
+        HeaderResult::Uid(uid) => uid,
     };
 
-    let user = users::Entity::find()
-        .filter(users::Column::Uid.eq(uid))
-        .one(&data.connection)
-        .await;
+    let user = users::Entity::find_by_id(uid).one(&data.connection).await;
 
     match user {
         Ok(user) => match user {
@@ -54,12 +51,12 @@ pub async fn handler(request: actix_web::HttpRequest, data: Data<AppState>) -> i
         Err(err) => {
             info!("{}", err.to_string());
             (
-            Json(ApiResponse::ApiError {
-                message: "Something went wrong".to_string(),
-                error_code: "INTERNAL_SERVER_ERROR".to_string(),
-            }),
-            http::StatusCode::INTERNAL_SERVER_ERROR,
-        )
-    },
+                Json(ApiResponse::ApiError {
+                    message: "Something went wrong".to_string(),
+                    error_code: "INTERNAL_SERVER_ERROR".to_string(),
+                }),
+                http::StatusCode::INTERNAL_SERVER_ERROR,
+            )
+        }
     }
 }
