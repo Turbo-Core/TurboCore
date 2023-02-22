@@ -5,6 +5,12 @@ pub mod login;
 pub mod refresh;
 pub mod signup;
 pub mod get_user;
+pub mod delete_user;
+pub mod change_password;
+pub mod email_verify;
+pub mod logout;
+pub mod reset_password;
+pub mod update_user;
 pub mod util;
 
 #[derive(Debug, Serialize)]
