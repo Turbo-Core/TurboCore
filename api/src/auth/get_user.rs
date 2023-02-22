@@ -45,8 +45,8 @@ pub async fn handler(request: actix_web::HttpRequest, data: Data<AppState>) -> i
             ),
             None => (
                 Json(ApiResponse::ApiError {
-                    message: "The requested user was not found",
-                    error_code: "USER_NOT_FOUND",
+                    message: "The requested user was not found".to_string(),
+                    error_code: "USER_NOT_FOUND".to_string(),
                 }),
                 http::StatusCode::NOT_FOUND,
             ),
@@ -55,8 +55,8 @@ pub async fn handler(request: actix_web::HttpRequest, data: Data<AppState>) -> i
             info!("{}", err.to_string());
             (
             Json(ApiResponse::ApiError {
-                message: "Something went wrong",
-                error_code: "INTERNAL_SERVER_ERROR",
+                message: "Something went wrong".to_string(),
+                error_code: "INTERNAL_SERVER_ERROR".to_string(),
             }),
             http::StatusCode::INTERNAL_SERVER_ERROR,
         )

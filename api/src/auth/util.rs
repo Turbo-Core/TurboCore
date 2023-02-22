@@ -66,7 +66,7 @@ pub async fn get_at_and_rt(
 pub fn verify_header<'a>(
     auth_header: Option<&HeaderValue>,
     secret_key: &Hmac<Sha256>,
-) -> HeaderResult<'a> {
+) -> HeaderResult {
     let authorization = match auth_header {
         Some(a) => {
             match a.to_str() {
@@ -76,8 +76,8 @@ pub fn verify_header<'a>(
                     // TODO: Log this
                     return HeaderResult::Error(
                         Json(ApiResponse::ApiError {
-                            message: "The 'Authorization' header is improperly formatted",
-                            error_code: "BAD_HEADER",
+                            message: "The 'Authorization' header is improperly formatted".to_string(),
+                            error_code: "BAD_HEADER".to_string(),
                         }),
                         http::StatusCode::BAD_REQUEST,
                     );
@@ -87,8 +87,8 @@ pub fn verify_header<'a>(
         None => {
             return HeaderResult::Error(
                 Json(ApiResponse::ApiError {
-                    message: "The request is missing an 'Authorization' header",
-                    error_code: "NOT_AUTHENTICATED",
+                    message: "The request is missing an 'Authorization' header".to_string(),
+                    error_code: "NOT_AUTHENTICATED".to_string(),
                 }),
                 http::StatusCode::UNAUTHORIZED,
             );
@@ -99,8 +99,8 @@ pub fn verify_header<'a>(
     if parts[0] != "Bearer" && parts[0] != "bearer" {
         return HeaderResult::Error(
             Json(ApiResponse::ApiError {
-                message: "The 'Authorization' header is improperly formatted",
-                error_code: "BAD_HEADER",
+                message: "The 'Authorization' header is improperly formatted".to_string(),
+                error_code: "BAD_HEADER".to_string(),
             }),
             http::StatusCode::BAD_REQUEST,
         );
@@ -110,8 +110,8 @@ pub fn verify_header<'a>(
         None => {
             return HeaderResult::Error(
                 Json(ApiResponse::ApiError {
-                    message: "The 'Authorization' header is improperly formatted",
-                    error_code: "BAD_HEADER",
+                    message: "The 'Authorization' header is improperly formatted".to_string(),
+                    error_code: "BAD_HEADER".to_string(),
                 }),
                 http::StatusCode::BAD_REQUEST,
             );
@@ -123,8 +123,8 @@ pub fn verify_header<'a>(
         Err(_) => {
             return HeaderResult::Error(
                 Json(ApiResponse::ApiError {
-                    message: "The JWT could not be verified by the server",
-                    error_code: "BAD_TOKEN",
+                    message: "The JWT could not be verified by the server".to_string(),
+                    error_code: "BAD_TOKEN".to_string(),
                 }),
                 http::StatusCode::UNAUTHORIZED,
             );
@@ -134,8 +134,8 @@ pub fn verify_header<'a>(
     if Utc::now().timestamp() > claims.get("exp").unwrap().parse().unwrap() {
         return HeaderResult::Error(
             Json(ApiResponse::ApiError {
-                message: "The JWT has already expired",
-                error_code: "BAD_TOKEN",
+                message: "The JWT has already expired".to_string(),
+                error_code: "BAD_TOKEN".to_string(),
             }),
             http::StatusCode::UNAUTHORIZED,
         );
@@ -146,7 +146,7 @@ pub fn verify_header<'a>(
     HeaderResult::Uid(Uuid::from_str(uid).unwrap())
 }
 
-pub enum HeaderResult<'a> {
-    Error(Json<ApiResponse<'a>>, StatusCode),
+pub enum HeaderResult {
+    Error(Json<ApiResponse>, StatusCode),
     Uid(Uuid),
 }

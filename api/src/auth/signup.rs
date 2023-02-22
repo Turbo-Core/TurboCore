@@ -97,15 +97,15 @@ pub async fn handler(data: Data<AppState>, body: Json<SignupBody>) -> impl Respo
         }
         Err(DbErr::RecordNotInserted) => (
             Json(ApiResponse::ApiError {
-                message: "This email is already in use.",
-                error_code: "EMAIL_ALREADY_IN_USE",
+                message: "This email is already in use.".to_string(),
+                error_code: "EMAIL_ALREADY_IN_USE".to_string(),
             }),
             http::StatusCode::CONFLICT,
         ),
         _ => (
             Json(ApiResponse::ApiError {
-                message: "Internal Server Error",
-                error_code: "INTERNAL_ERROR",
+                message: "Internal Server Error".to_string(),
+                error_code: "INTERNAL_ERROR".to_string(),
             }),
             http::StatusCode::INTERNAL_SERVER_ERROR,
         ),

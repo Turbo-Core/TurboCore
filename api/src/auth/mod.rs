@@ -15,10 +15,10 @@ pub mod util;
 
 #[derive(Debug, Serialize)]
 #[serde(untagged)]
-pub enum ApiResponse<'a> {
+pub enum ApiResponse {
     ApiError {
-        message: &'a str,
-        error_code: &'a str,
+        message: String,
+        error_code: String,
     },
     SignupResponse {
         uid: String,

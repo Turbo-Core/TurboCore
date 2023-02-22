@@ -33,8 +33,8 @@ pub async fn handler(data: Data<AppState>, body: Json<LoginBody>) -> impl Respon
                     if !argon2::verify_encoded(&user.password, body.password.as_bytes()).unwrap() {
                         return (
                             Json(ApiResponse::ApiError {
-                                message: "The email or password is invalid",
-                                error_code: "INVALID_CREDENTIALS",
+                                message: "The email or password is invalid".to_string(),
+                                error_code: "INVALID_CREDENTIALS".to_string(),
                             }),
                             http::StatusCode::UNAUTHORIZED,
                         );
@@ -58,8 +58,8 @@ pub async fn handler(data: Data<AppState>, body: Json<LoginBody>) -> impl Respon
                 None => {
                     (
                         Json(ApiResponse::ApiError {
-                            message: "The email or password is invalid",
-                            error_code: "INVALID_CREDENTIALS",
+                            message: "The email or password is invalid".to_string(),
+                            error_code: "INVALID_CREDENTIALS".to_string(),
                         }),
                         http::StatusCode::UNAUTHORIZED,
                     )
@@ -69,8 +69,8 @@ pub async fn handler(data: Data<AppState>, body: Json<LoginBody>) -> impl Respon
         // Some DBErr occurred. TODO: handle this
         Err(_) => (
             Json(ApiResponse::ApiError {
-                message: "Internal server error.",
-                error_code: "INTERNAL_SERVER_ERROR",
+                message: "Internal server error.".to_string(),
+                error_code: "INTERNAL_SERVER_ERROR".to_string(),
             }),
             http::StatusCode::INTERNAL_SERVER_ERROR,
         ),

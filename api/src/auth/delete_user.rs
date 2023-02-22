@@ -58,4 +58,4 @@ pub async fn handler(
     Either::Right(HttpResponse::Ok().finish())
 }
 
-type DeleteUserResponse<'a> = Either<(Json<ApiResponse<'a>>, http::StatusCode), HttpResponse>;
+type DeleteUserResponse<'a> = Either<(Json<ApiResponse>, http::StatusCode), HttpResponse>;

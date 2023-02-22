@@ -30,8 +30,8 @@ pub async fn handler(data: Data<AppState>, body: Json<RefreshBody>) -> impl Resp
             Err(_) => {
                 return (
                     Json(ApiResponse::ApiError {
-                        message: "The provided JWT could not be verified by the server",
-                        error_code: "INVALID_JWT",
+                        message: "The provided JWT could not be verified by the server".to_string(),
+                        error_code: "INVALID_JWT".to_string(),
                     }),
                     http::StatusCode::UNAUTHORIZED,
                 );
@@ -60,8 +60,8 @@ pub async fn handler(data: Data<AppState>, body: Json<RefreshBody>) -> impl Resp
                 error!("Database error: {}", err.to_string());
                 return (
                     Json(ApiResponse::ApiError {
-                        message: "Internal Server Error",
-                        error_code: "INTERNAL_SERVER_ERROR",
+                        message: "Internal Server Error".to_string(),
+                        error_code: "INTERNAL_SERVER_ERROR".to_string(),
                     }),
                     http::StatusCode::INTERNAL_SERVER_ERROR,
                 );
@@ -76,8 +76,8 @@ pub async fn handler(data: Data<AppState>, body: Json<RefreshBody>) -> impl Resp
                         return (
                             Json(ApiResponse::ApiError {
                                 message:
-                                    "The JWT provided has already expired. Please log in again",
-                                error_code: "EXPIRED_JWT",
+                                    "The JWT provided has already expired. Please log in again".to_string(),
+                                error_code: "EXPIRED_JWT".to_string(),
                             }),
                             http::StatusCode::UNAUTHORIZED,
                         );
@@ -116,8 +116,8 @@ pub async fn handler(data: Data<AppState>, body: Json<RefreshBody>) -> impl Resp
     }
     (
         Json(ApiResponse::ApiError {
-            message: "The JWT provided has already expired. Please log in again",
-            error_code: "EXPIRED_JWT",
+            message: "The JWT provided has already expired. Please log in again".to_string(),
+            error_code: "EXPIRED_JWT".to_string(),
         }),
         http::StatusCode::UNAUTHORIZED,
     )
