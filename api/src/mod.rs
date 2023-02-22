@@ -1,6 +1,15 @@
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 
 pub mod auth;
+
+#[macro_use]
+extern crate lazy_static;
+
+// Using lazy static to avoid compiling this regex every time we need it, as the computation is expensive
+lazy_static! {
+    pub static ref EMAIL_REGEX: Regex = Regex::new(r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$").unwrap();
+}
 
 #[derive(Debug, Clone)]
 pub struct Config {
@@ -10,6 +19,7 @@ pub struct Config {
     pub debug_level: String,
     pub bind_addr: String,
     pub argon2_config: Argon2Config,
+    pub minimum_password_strength: u8
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

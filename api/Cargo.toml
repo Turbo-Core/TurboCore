@@ -18,6 +18,9 @@ uuid = { version = "1.3.0", features = ["v4", "fast-rng"] }
 hmac = "0.12.1"
 sha2 = "0.10.6"
 jwt = "0.16.0"
+lazy_static = "1.4.0"
+regex = "1.7.1"
+zxcvbn = "2.2.1"
 # Sea-ORM
 entity = { path = "../entity" }
 migration = { path = "../migration" }

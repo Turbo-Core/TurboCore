@@ -1,5 +1,11 @@
+extern crate zxcvbn;
+
 use crate::auth::{util, ApiResponse};
-use actix_web::{http, post, Responder, web::{Data, Json}};
+use actix_web::{
+    http, post,
+    web::{Data, Json},
+    Responder,
+};
 use argon2::{self, Config as ArgonConfig, ThreadMode, Variant, Version};
 use chrono::Utc;
 use entity::users;
@@ -7,6 +13,7 @@ use migration::{DbErr, OnConflict};
 use rand::{thread_rng, Rng};
 use sea_orm::{EntityTrait, Set};
 use uuid::Uuid;
+use zxcvbn::zxcvbn;
 
 use crate::AppState;
 
@@ -22,6 +29,48 @@ pub struct SignupBody {
 
 #[post("/api/auth/user/create")]
 pub async fn handler(data: Data<AppState>, body: Json<SignupBody>) -> impl Responder {
+    // Check email validity
+    if !crate::EMAIL_REGEX.is_match(&body.email) {
+        return (
+            Json(ApiResponse::ApiError {
+                message: "The provided email is invalid.".to_string(),
+                error_code: "INVALID_EMAIL".to_string(),
+            }),
+            http::StatusCode::BAD_REQUEST,
+        );
+    }
+
+    // Check password strength
+    let estimate = match zxcvbn(&body.password, &[]) {
+        Ok(ent) => ent,
+        Err(_) => {
+            return (
+                Json(ApiResponse::ApiError {
+                    message: "An empty password was provided.".to_string(),
+                    error_code: "INVALID_PASSWORD".to_string(),
+                }),
+                http::StatusCode::BAD_REQUEST,
+            );
+        }
+    };
+    let score = estimate.score();
+    if score < data.config.minimum_password_strength {
+        let feedback_msg = match estimate.feedback().clone() {
+            Some(w) => match w.warning() {
+                Some(w) => format!("The password provided is too weak. {w}",),
+                None => "The password provided is too weak.".to_string(),
+            },
+            None => "The password provided is too weak.".to_string(),
+        };
+        return (
+            Json(ApiResponse::ApiError {
+                message: feedback_msg,
+                error_code: "INVALID_PASSWORD".to_string(),
+            }),
+            http::StatusCode::BAD_REQUEST,
+        );
+    }
+
     // Get uid for new user
     let user_uid = Uuid::new_v4();
 
