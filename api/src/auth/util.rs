@@ -63,10 +63,7 @@ pub async fn get_at_and_rt(
     (token.sign_with_key(key).unwrap(), rt, short_exp)
 }
 
-pub fn verify_header (
-    auth_header: Option<&HeaderValue>,
-    secret_key: &Hmac<Sha256>,
-) -> HeaderResult {
+pub fn verify_header(auth_header: Option<&HeaderValue>, secret_key: &Hmac<Sha256>) -> HeaderResult {
     let authorization = match auth_header {
         Some(a) => {
             match a.to_str() {
@@ -76,7 +73,8 @@ pub fn verify_header (
                     // TODO: Log this
                     return HeaderResult::Error(
                         Json(ApiResponse::ApiError {
-                            message: "The 'Authorization' header is improperly formatted".to_string(),
+                            message: "The 'Authorization' header is improperly formatted"
+                                .to_string(),
                             error_code: "BAD_HEADER".to_string(),
                         }),
                         http::StatusCode::BAD_REQUEST,

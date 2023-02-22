@@ -9,9 +9,9 @@ use actix_web::{
 };
 use argon2;
 use entity::users;
+use log::error;
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use serde::Deserialize;
-use log::error;
 
 #[derive(Deserialize)]
 pub struct LoginBody {
@@ -56,25 +56,27 @@ pub async fn handler(data: Data<AppState>, body: Json<LoginBody>) -> impl Respon
                     )
                 }
                 // User is not found
-                None => {
-                    (
-                        Json(ApiResponse::ApiError {
-                            message: "The email or password is invalid".to_string(),
-                            error_code: "INVALID_CREDENTIALS".to_string(),
-                        }),
-                        http::StatusCode::UNAUTHORIZED,
-                    )
-                }
+                None => (
+                    Json(ApiResponse::ApiError {
+                        message: "The email or password is invalid".to_string(),
+                        error_code: "INVALID_CREDENTIALS".to_string(),
+                    }),
+                    http::StatusCode::UNAUTHORIZED,
+                ),
             }
         }
         Err(e) => {
-            error!("An error occurred when finding user. Error: {}", e.to_string());
+            error!(
+                "An error occurred when finding user. Error: {}",
+                e.to_string()
+            );
             (
-            Json(ApiResponse::ApiError {
-                message: "Internal server error.".to_string(),
-                error_code: "INTERNAL_SERVER_ERROR".to_string(),
-            }),
-            http::StatusCode::INTERNAL_SERVER_ERROR,
-        )},
+                Json(ApiResponse::ApiError {
+                    message: "Internal server error.".to_string(),
+                    error_code: "INTERNAL_SERVER_ERROR".to_string(),
+                }),
+                http::StatusCode::INTERNAL_SERVER_ERROR,
+            )
+        }
     }
 }

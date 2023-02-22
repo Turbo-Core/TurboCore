@@ -15,7 +15,7 @@ pub struct ConfigInternal {
     pub bind_addr: Option<String>,
     pub argon2_params: Option<Argon2Config>,
     pub email: Option<EmailConfig>,
-    pub minimum_password_strength: Option<u8>
+    pub minimum_password_strength: Option<u8>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -29,7 +29,7 @@ pub struct EmailConfig {
     reply_to: String,
     magic_link_subject: Option<String>,
     forgot_password_subject: Option<String>,
-    confirmation_subject: Option<String>
+    confirmation_subject: Option<String>,
 }
 
 fn verify_connection_url(url: &str) -> bool {
@@ -78,7 +78,7 @@ pub fn load_config() -> Config {
                 tag_length: 32,
             },
         },
-        minimum_password_strength: json_config.minimum_password_strength.unwrap_or(1)
+        minimum_password_strength: json_config.minimum_password_strength.unwrap_or(1),
     };
 
     if !verify_connection_url(&config.connection_url) {

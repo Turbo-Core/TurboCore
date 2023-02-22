@@ -19,7 +19,7 @@ pub struct Config {
     pub debug_level: String,
     pub bind_addr: String,
     pub argon2_config: Argon2Config,
-    pub minimum_password_strength: u8
+    pub minimum_password_strength: u8,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

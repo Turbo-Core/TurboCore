@@ -1,15 +1,15 @@
-use serde::Serialize;
 use sea_orm::entity::prelude::DateTime;
+use serde::Serialize;
 
-pub mod login;
-pub mod refresh;
-pub mod signup;
-pub mod get_user;
-pub mod delete_user;
 pub mod change_password;
+pub mod delete_user;
 pub mod email_verify;
+pub mod get_user;
+pub mod login;
 pub mod logout;
+pub mod refresh;
 pub mod reset_password;
+pub mod signup;
 pub mod update_user;
 pub mod util;
 
@@ -46,5 +46,5 @@ pub enum ApiResponse {
         active: bool,
         metadata: Option<String>,
         email_verified: bool,
-    }
+    },
 }

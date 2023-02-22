@@ -12,10 +12,10 @@ use actix_web::{
 use chrono::Utc;
 use entity::refresh_tokens::{self, ActiveModel};
 use jwt::VerifyWithKey;
+use log::error;
 use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, Set};
 use serde::Deserialize;
 use uuid::Uuid;
-use log::error;
 
 #[derive(Deserialize)]
 pub struct RefreshBody {
@@ -76,7 +76,8 @@ pub async fn handler(data: Data<AppState>, body: Json<RefreshBody>) -> impl Resp
                         return (
                             Json(ApiResponse::ApiError {
                                 message:
-                                    "The JWT provided has already expired. Please log in again".to_string(),
+                                    "The JWT provided has already expired. Please log in again"
+                                        .to_string(),
                                 error_code: "EXPIRED_JWT".to_string(),
                             }),
                             http::StatusCode::UNAUTHORIZED,
