@@ -5,16 +5,16 @@ use sea_orm::entity::prelude::*;
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
 #[sea_orm(table_name = "users")]
 pub struct Model {
-    #[sea_orm(primary_key, auto_increment = false)]
-    pub uid: Uuid,
-    pub email: String,
-    pub password: String,
-    pub created_at: DateTime,
-    pub updated_at: DateTime,
-    pub last_login: Option<DateTime>,
-    pub active: bool,
-    pub metadata: Option<String>,
-    pub email_verified: bool,
+	#[sea_orm(primary_key, auto_increment = false)]
+	pub uid: Uuid,
+	pub email: String,
+	pub password: String,
+	pub created_at: DateTime,
+	pub updated_at: DateTime,
+	pub last_login: Option<DateTime>,
+	pub active: bool,
+	pub metadata: Option<String>,
+	pub email_verified: bool,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
