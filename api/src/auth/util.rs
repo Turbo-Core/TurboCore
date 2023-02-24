@@ -2,7 +2,7 @@ use actix_web::{
 	http::{self, header::HeaderValue, StatusCode},
 	web::Json,
 };
-use chrono::{NaiveDateTime, Utc};
+use chrono::{NaiveDateTime, Utc, Duration};
 use entity::refresh_tokens;
 use hmac::Hmac;
 use jwt::{SignWithKey, VerifyWithKey};
@@ -26,9 +26,9 @@ pub async fn get_at_and_rt(
 
 	// TODO: make exp configurable
 	// The RFC protocol allows for some lee way ("up to a few minutes") in exp, hence +15 seconds
-	let short_exp = Utc::now().timestamp() + 15 * 60 + 15;
+	let short_exp = Utc::now().timestamp() + Duration::minutes(15).num_seconds() + 15;
 	let short_exp_str = short_exp.to_string();
-	let long_exp = Utc::now().timestamp() + 60 * 60 * 24 * 7;
+	let long_exp = Utc::now().timestamp() + Duration::days(30).num_seconds();
 	let long_exp_str = long_exp.to_string();
 
 	// RT is used as a primary key in db and must be unique. Two tokens (with same uid) generated in the same second will
