@@ -1,4 +1,5 @@
 {
+    
     "connection_url": "sqlite::memory:",
     "secret_key": "a_super_secret_key. Use: 'openssl rand -hex 32' to generate one",
     "debug_level": "info",

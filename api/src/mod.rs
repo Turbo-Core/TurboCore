@@ -1,5 +1,7 @@
 use regex::Regex;
 use serde::{Deserialize, Serialize};
+use lettre::AsyncSmtpTransport;
+use lettre::Tokio1Executor;
 
 pub mod auth;
 
@@ -13,6 +15,7 @@ lazy_static! {
 
 #[derive(Debug, Clone)]
 pub struct Config {
+	pub base_url: String,
 	pub connection_url: String,
 	pub secret_key: hmac::Hmac<sha2::Sha256>,
 	pub bcrypt_cost: u32,
@@ -20,6 +23,8 @@ pub struct Config {
 	pub bind_addr: String,
 	pub argon2_config: Argon2Config,
 	pub minimum_password_strength: u8,
+	pub mailer: Option<AsyncSmtpTransport<Tokio1Executor>>,
+	pub email: Option<EmailConfig>
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -31,7 +36,22 @@ pub struct Argon2Config {
 	pub tag_length: u32,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EmailConfig {
+	pub smtp_server: String,
+	pub smtp_port: u16,
+	pub smtp_username: String,
+	pub smtp_password: String,
+	pub smtp_encryption: String,
+	pub from: String,
+	pub reply_to: String,
+	pub magic_link_subject: String,
+	pub forgot_password_subject: String,
+	pub confirmation_subject: String,
+}
+
 pub struct AppState {
 	pub connection: sea_orm::DatabaseConnection,
 	pub config: Config,
 }
+

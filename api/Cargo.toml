@@ -24,6 +24,8 @@ zxcvbn = "2.2.1"
 # Sea-ORM
 entity = { path = "../entity" }
 migration = { path = "../migration" }
+email = { path = "../email" }
+lettre = { version = "0.10", features = ["tokio1-rustls-tls"] }
 sea-orm = { version = "^0", features = [
     "sqlx-mysql",
     "sqlx-postgres",

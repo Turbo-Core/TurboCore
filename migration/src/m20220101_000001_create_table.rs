@@ -51,6 +51,7 @@ impl MigrationTrait for Migration {
 				.col(ColumnDef::new(EmailVerification::Uid).uuid().not_null())
 				.col(ColumnDef::new(EmailVerification::Token).string().primary_key().not_null())
 				.col(ColumnDef::new(EmailVerification::Expiry).date_time().not_null())
+				.col(ColumnDef::new(EmailVerification::Next).string().not_null())
 				.to_owned(),
 		).await?;
 		manager
@@ -124,5 +125,6 @@ enum EmailVerification {
 	Table,
 	Uid,
 	Token,
-	Expiry
+	Expiry,
+	Next
 }
