@@ -3,6 +3,7 @@ use lettre::message::{MultiPart, SinglePart};
 use lettre::AsyncTransport;
 use lettre::Message;
 use sailfish::TemplateOnce;
+use log::error;
 
 use crate::EmailParams;
 
@@ -52,12 +53,19 @@ pub async fn send(params: EmailParams<'_>) {
 						.header(ContentType::TEXT_PLAIN)
 						.body(txt),
 				),
-		)
-		.unwrap();
+		);
+	
+	let email = match email {
+		Ok(email) => email,
+		Err(err) => {
+			error!("Failed to build email: {err}");
+			return;
+		}
+		
+	};
 
 	match params.mailer.send(email).await {
-		Ok(a) => (),
-		Err(err) => println!("{err}"),
+		Ok(_) => (),
+		Err(err) => error!("Failed to send email: {err}"),
 	}
-	// println!("{html}");
 }

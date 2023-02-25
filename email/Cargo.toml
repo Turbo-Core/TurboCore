@@ -11,3 +11,4 @@ path = "src/lib.rs"
 [dependencies]
 lettre = "0.10.3"
 sailfish = "0.6.0"
+log = "0.4.17"
