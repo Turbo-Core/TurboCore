@@ -8,13 +8,27 @@ use crate::EmailParams;
 
 #[derive(TemplateOnce)]
 #[template(path = "verification.stpl")]
-struct VerificationTemplate {
+struct VerificationTemplateHtml {
+	name: String,
+	action_url: String,
+}
+
+#[derive(TemplateOnce)]
+#[template(path = "verification.txt")]
+struct VerificationTemplateTxt {
 	name: String,
 	action_url: String,
 }
 
 pub async fn send(params: EmailParams<'_>) {
-	let html = VerificationTemplate {
+	let html = VerificationTemplateHtml {
+		action_url: params.action_url.clone(),
+		name: params.name.clone(),
+	}
+	.render_once()
+	.unwrap();
+
+	let txt = VerificationTemplateTxt {
 		action_url: params.action_url,
 		name: params.name,
 	}
@@ -36,17 +50,14 @@ pub async fn send(params: EmailParams<'_>) {
 				.singlepart(
 					SinglePart::builder()
 						.header(ContentType::TEXT_PLAIN)
-						.body("Hello, world!".to_string()),
+						.body(txt),
 				),
-		).unwrap();
+		)
+		.unwrap();
 
 	match params.mailer.send(email).await {
-		Ok(a) => {
-			for i in a.message() {
-				println!("{i}")
-			}
-		}
-		Err(a) => println!("{a}"),
+		Ok(a) => (),
+		Err(err) => println!("{err}"),
 	}
 	// println!("{html}");
 }
