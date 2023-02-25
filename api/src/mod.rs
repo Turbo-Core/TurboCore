@@ -1,7 +1,7 @@
-use regex::Regex;
-use serde::{Deserialize, Serialize};
 use lettre::AsyncSmtpTransport;
 use lettre::Tokio1Executor;
+use regex::Regex;
+use serde::{Deserialize, Serialize};
 
 pub mod auth;
 
@@ -24,7 +24,7 @@ pub struct Config {
 	pub argon2_config: Argon2Config,
 	pub minimum_password_strength: u8,
 	pub mailer: Option<AsyncSmtpTransport<Tokio1Executor>>,
-	pub email: Option<EmailConfig>
+	pub email: Option<EmailConfig>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -54,4 +54,3 @@ pub struct AppState {
 	pub connection: sea_orm::DatabaseConnection,
 	pub config: Config,
 }
-

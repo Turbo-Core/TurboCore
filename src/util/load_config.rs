@@ -1,8 +1,8 @@
 use api::{Argon2Config, Config, EmailConfig};
 use hmac::{Hmac, Mac};
-use lettre::{AsyncSmtpTransport, Tokio1Executor};
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::transport::smtp::client::{Tls, TlsParameters};
+use lettre::{AsyncSmtpTransport, Tokio1Executor};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use uuid::Uuid;
@@ -72,30 +72,33 @@ pub fn load_config() -> Config {
 		minimum_password_strength: json_config.minimum_password_strength.unwrap_or(1),
 		mailer: match json_config.email {
 			Some(ref email_config) => {
-				let mut mailer = AsyncSmtpTransport::<Tokio1Executor>::relay(&email_config.smtp_server).unwrap()
-					.port(email_config.smtp_port);
+				let mut mailer =
+					AsyncSmtpTransport::<Tokio1Executor>::relay(&email_config.smtp_server)
+						.unwrap()
+						.port(email_config.smtp_port);
 				let tls = match email_config.smtp_encryption.as_str() {
-					"None" | "none" => {
-						Tls::None
-					},
-					"TLS" | "tls" => {
-						Tls::Required(TlsParameters::new_native(email_config.smtp_server.clone()).unwrap())
-					},
-					"STARTTLS" | "starttls" => {
-						Tls::Opportunistic(TlsParameters::new_native(email_config.smtp_server.clone()).unwrap())
-					},
+					"None" | "none" => Tls::None,
+					"TLS" | "tls" => Tls::Required(
+						TlsParameters::new_native(email_config.smtp_server.clone()).unwrap(),
+					),
+					"STARTTLS" | "starttls" => Tls::Opportunistic(
+						TlsParameters::new_native(email_config.smtp_server.clone()).unwrap(),
+					),
 					_ => {
 						panic!("Provided TLS method is not supported")
 					}
 				};
 				if !"".eq(&email_config.smtp_username) {
-					mailer = mailer.credentials(Credentials::new(email_config.smtp_username.clone(), email_config.smtp_password.clone()));
+					mailer = mailer.credentials(Credentials::new(
+						email_config.smtp_username.clone(),
+						email_config.smtp_password.clone(),
+					));
 				}
 				Some(mailer.tls(tls).build())
-			},
-			None => None
+			}
+			None => None,
 		},
-		email: json_config.email
+		email: json_config.email,
 	};
 
 	if !verify_connection_url(&config.connection_url) {

@@ -2,7 +2,7 @@ use actix_web::{
 	http::{self, header::HeaderValue, StatusCode},
 	web::Json,
 };
-use chrono::{NaiveDateTime, Utc, Duration};
+use chrono::{Duration, NaiveDateTime, Utc};
 use entity::refresh_tokens;
 use hmac::Hmac;
 use jwt::{SignWithKey, VerifyWithKey};

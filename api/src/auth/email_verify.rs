@@ -6,9 +6,9 @@ use crate::{
 	AppState,
 };
 use actix_web::{
-	http, post,
+	get, http, post,
 	web::{Data, Json, Path},
-	Either, HttpResponse, get,
+	Either, HttpResponse,
 };
 
 use chrono::{Duration, NaiveDateTime, Utc};
@@ -78,7 +78,7 @@ pub async fn send_handler(
 		));
 	}
 
-	let mailer =  data.config.mailer.as_ref().unwrap();
+	let mailer = data.config.mailer.as_ref().unwrap();
 
 	let token = Uuid::new_v4().to_string();
 
@@ -92,8 +92,9 @@ pub async fn send_handler(
 		expiry: Set(NaiveDateTime::from_timestamp_opt(
 			Utc::now().timestamp() + Duration::minutes(15).num_seconds(),
 			0,
-		).unwrap()),
-		next: Set(data.config.base_url.to_owned())
+		)
+		.unwrap()),
+		next: Set(data.config.base_url.to_owned()),
 	}
 	.insert(&data.connection)
 	.await)
@@ -120,8 +121,9 @@ pub async fn send_handler(
 		from: email_config.from,
 		to: user.email,
 		reply_to: email_config.reply_to,
-		mailer
-    }).await;
+		mailer,
+	})
+	.await;
 
 	Either::Right(HttpResponse::Ok().finish())
 }
@@ -130,13 +132,14 @@ pub async fn send_handler(
 pub async fn receive_handler(data: Data<AppState>, path: Path<String>) -> HttpResponse {
 	let token = path.into_inner();
 
-	let verification = match email_verification::Entity::find_by_id(&token).one(&data.connection).await {
-		Ok(verification) => {
-			match verification {
-				Some(verification) => verification,
-				None => {
-					return HttpResponse::NotFound().finish();
-				}
+	let verification = match email_verification::Entity::find_by_id(&token)
+		.one(&data.connection)
+		.await
+	{
+		Ok(verification) => match verification {
+			Some(verification) => verification,
+			None => {
+				return HttpResponse::NotFound().finish();
 			}
 		},
 		Err(_) => {
@@ -148,13 +151,14 @@ pub async fn receive_handler(data: Data<AppState>, path: Path<String>) -> HttpRe
 		return HttpResponse::Gone().finish();
 	}
 
-	let user = match users::Entity::find_by_id(verification.uid).one(&data.connection).await {
-		Ok(user) => {
-			match user {
-				Some(user) => user,
-				None => {
-					return HttpResponse::NotFound().finish();
-				}
+	let user = match users::Entity::find_by_id(verification.uid)
+		.one(&data.connection)
+		.await
+	{
+		Ok(user) => match user {
+			Some(user) => user,
+			None => {
+				return HttpResponse::NotFound().finish();
 			}
 		},
 		Err(_) => {
@@ -173,7 +177,10 @@ pub async fn receive_handler(data: Data<AppState>, path: Path<String>) -> HttpRe
 		}
 	}
 
-	match email_verification::Entity::delete_by_id(&token).exec(&data.connection).await {
+	match email_verification::Entity::delete_by_id(&token)
+		.exec(&data.connection)
+		.await
+	{
 		Ok(_) => (),
 		Err(e) => {
 			error!("Unable to delete email verification token. Error: {}", e.to_string());
@@ -181,6 +188,7 @@ pub async fn receive_handler(data: Data<AppState>, path: Path<String>) -> HttpRe
 		}
 	}
 
-	HttpResponse::Ok().insert_header(("Location", verification.next)).finish()
-
+	HttpResponse::Ok()
+		.insert_header(("Location", verification.next))
+		.finish()
 }
