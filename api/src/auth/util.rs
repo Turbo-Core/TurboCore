@@ -41,10 +41,12 @@ pub async fn get_at_and_rt(
 	refresh_token.insert("iss", "TurboCore");
 	refresh_token.insert("exp", &long_exp_str);
 	refresh_token.insert("uid", uid);
+	refresh_token.insert("type", "rt");
 	refresh_token.insert("rand", &rand_val);
 
 	token.insert("iss", "TurboCore");
 	token.insert("exp", &short_exp_str);
+	token.insert("type", "at");
 	token.insert("uid", uid);
 
 	let rt = refresh_token.sign_with_key(key).unwrap();
@@ -133,6 +135,16 @@ pub fn verify_header(auth_header: Option<&HeaderValue>, secret_key: &Hmac<Sha256
 		return HeaderResult::Error(
 			Json(ApiResponse::ApiError {
 				message: "The JWT has already expired".to_string(),
+				error_code: "BAD_TOKEN".to_string(),
+			}),
+			http::StatusCode::UNAUTHORIZED,
+		);
+	}
+
+	if claims.get("type").unwrap() != "at" {
+		return HeaderResult::Error(
+			Json(ApiResponse::ApiError {
+				message: "The JWT is not an access token".to_string(),
 				error_code: "BAD_TOKEN".to_string(),
 			}),
 			http::StatusCode::UNAUTHORIZED,
