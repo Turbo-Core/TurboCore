@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use crate::{
 	auth::{
         util::get_at_and_rt,
@@ -7,12 +9,14 @@ use crate::{
 };
 use actix_web::{
 	get, http, post,
-	web::{Data, Json, Path, Query},
+	web::{Data, Json, Path},
 	Either, HttpResponse,
 };
 
+use chrono::{Utc, Duration};
 use email::{verification, EmailParams};
 use entity::users;
+use jwt::{SignWithKey, VerifyWithKey};
 use log::error;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
 use uuid::Uuid;
@@ -102,9 +106,20 @@ pub async fn post_handler(
 		}
 	};
 
+	let mut claims: BTreeMap<&str, &str> = BTreeMap::new();
+	let uid_str = user.uid.to_string();
+	let exp = (Utc::now().timestamp() + Duration::minutes(15).num_seconds()).to_string();
+	claims.insert("iss", "TurboCore");
+	claims.insert("type", "magic-link");
+	claims.insert("uid", &uid_str);
+	claims.insert("exp", &exp);
+	claims.insert("next", &body.next_url);
+
+	let token = claims.sign_with_key(&data.config.secret_key).unwrap();
+
     let action_url = format!(
-        "{}/api/auth/user/magic-link/{}?next={}",
-        data.config.base_url, user.uid, body.next_url
+        "{}/api/auth/user/magic-link/{}",
+        data.config.base_url, token
     );
 
 	let mailer = data.config.mailer.as_ref().unwrap();
@@ -125,23 +140,36 @@ pub async fn post_handler(
 	Either::Right(HttpResponse::Ok().finish())
 }
 
-#[derive(serde::Deserialize)]
-pub struct NextUrl {
-    pub next_url: String,
-}
-
 
 #[get("/api/auth/user/magic-link/{uid}")]
-pub async fn get_handler(data: Data<AppState>, path: Path<String>, next: Query<NextUrl>) -> HttpResponse {
-    let uid = match Uuid::parse_str(&path) {
-        Ok(uid) => uid,
-        Err(_) => {
-            return HttpResponse::BadRequest().json(ApiResponse::ApiError {
-                message: "Invalid UID".to_string(),
-                error_code: "INVALID_UID".to_string(),
-            })
-        }
-    };
+pub async fn get_handler(data: Data<AppState>, path: Path<String>) -> HttpResponse {
+	let token = path.into_inner();
+    let claims: BTreeMap<String, String> = match token.verify_with_key(&data.config.secret_key) {
+		Ok(claims) => claims,
+		Err(e) => {
+			error!("Unable to verify token. Error: {}", e.to_string());
+			return HttpResponse::BadRequest().json(ApiResponse::ApiError {
+				message: "The token is invalid.".to_string(),
+				error_code: "INVALID_TOKEN".to_string(),
+			});
+		}
+	};
+
+	if Utc::now().timestamp() > claims["exp"].parse::<i64>().unwrap() {
+		return HttpResponse::BadRequest().json(ApiResponse::ApiError {
+			message: "The token has expired.".to_string(),
+			error_code: "TOKEN_EXPIRED".to_string(),
+		});
+	}
+
+	if claims["type"] != "magic-link" {
+		return HttpResponse::BadRequest().json(ApiResponse::ApiError {
+			message: "The token is invalid.".to_string(),
+			error_code: "INVALID_TOKEN".to_string(),
+		});
+	}
+
+	let uid = Uuid::parse_str(&claims["uid"]).unwrap();
 
     let user = match users::Entity::find()
         .filter(users::Column::Uid.eq(uid))
@@ -170,7 +198,7 @@ pub async fn get_handler(data: Data<AppState>, path: Path<String>, next: Query<N
 
     let redirect_url = format!(
         "{}?at={}&rt={}&exp={}",
-        next.next_url, at, rt, exp
+        claims["next"], at, rt, exp
     );
 
     HttpResponse::Found()
