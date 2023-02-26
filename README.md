@@ -1,8 +1,23 @@
-# TurboCore
+<div align="center">
+  <img width="150" height="150" src="http://docs.turbocore.org/logo.svg">
+</div>
+<div id="user-content-toc" align="center">
+  <ul>
+    <summary><h1 style="display: inline-block;">TurboCore</h1></summary>
+  </ul>
+</div>
 TurboCore will be a blazing fast, reliable, and scalable Backend-as-a-service written in Rust.
+
+---
+<!--
+<a href='https://www.rust-lang.org/' target="_blank"><img alt='Rust' src='https://img.shields.io/badge/Built_with Rust-100000?style=for-the-badge&logo=Rust&logoColor=FEFEFF&labelColor=010100&color=black'/></a>
+-->
 
 # Documentation
 Documentation is being worked on along with the code. You can find the current documentation [here](https://docs.turbocore.org). **Note that the documentation is not even close to being complete, and more will be added as the project progresses.**
+
+# Feature Requests
+We welcome all feature requests from the community with open arms. If you have a feature request or a suggestion, you can create an issue on our GitHub repository. When creating an issue, please provide a clear and concise description of the feature or suggestion. This will help us to better understand what you are looking for and to implement it in a more efficient manner.
 
 ## Why Rust?
 Rust is a systems programming language that runs insanely fast, prevents segfaults, and guarantees thread safety. It also has a very active community and is used by many large companies such as Mozilla, Dropbox, and Twitter.
