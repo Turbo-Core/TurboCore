@@ -45,27 +45,6 @@ impl MigrationTrait for Migration {
 			)
 			.await?;
 		manager
-			.create_table(
-				Table::create()
-					.table(EmailVerification::Table)
-					.if_not_exists()
-					.col(ColumnDef::new(EmailVerification::Uid).uuid().not_null())
-					.col(
-						ColumnDef::new(EmailVerification::Token)
-							.string()
-							.primary_key()
-							.not_null(),
-					)
-					.col(
-						ColumnDef::new(EmailVerification::Expiry)
-							.date_time()
-							.not_null(),
-					)
-					.col(ColumnDef::new(EmailVerification::Next).string().not_null())
-					.to_owned(),
-			)
-			.await?;
-		manager
 			.create_index(
 				sea_query::Index::create()
 					.name("users_email")
@@ -105,14 +84,6 @@ impl MigrationTrait for Migration {
 					.if_exists()
 					.to_owned(),
 			)
-			.await?;
-		manager
-			.drop_table(
-				Table::drop()
-					.table(EmailVerification::Table)
-					.if_exists()
-					.to_owned(),
-			)
 			.await
 	}
 }
@@ -141,13 +112,4 @@ enum RefreshTokenEntry {
 	RefreshToken,
 	Expiry,
 	Used,
-}
-
-#[derive(Iden)]
-enum EmailVerification {
-	Table,
-	Uid,
-	Token,
-	Expiry,
-	Next,
 }

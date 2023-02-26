@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use crate::{
 	auth::{
 		util::{self, HeaderResult},
@@ -11,11 +13,13 @@ use actix_web::{
 	Either, HttpResponse,
 };
 
-use chrono::{Duration, NaiveDateTime, Utc};
+use chrono::{Duration, Utc};
 use email::{verification, EmailParams};
-use entity::{email_verification, users};
+use entity::users;
 use log::error;
 use sea_orm::{ActiveModelTrait, EntityTrait, Set};
+
+use jwt::{SignWithKey, VerifyWithKey};
 use uuid::Uuid;
 
 #[derive(serde::Deserialize)]
@@ -86,35 +90,20 @@ pub async fn send_handler(
 
 	let mailer = data.config.mailer.as_ref().unwrap();
 
-	let token = Uuid::new_v4().to_string();
+	let uid_str = user.uid.clone().to_string();
+	let exp_str = Utc::now().timestamp() + Duration::minutes(15).num_seconds();
+	let exp_str = exp_str.to_string();
+	let next_url = body.next_url.to_owned();
+
+	let mut claims: BTreeMap<&str, &str> = BTreeMap::new();
+	claims.insert("iss", "TurboCore");
+	claims.insert("uid", &uid_str);
+	claims.insert("exp", &exp_str);
+	claims.insert("next", &next_url);
+
+	let token = claims.sign_with_key(&data.config.secret_key).unwrap();
 
 	let action_link = format!("{}/api/auth/user/verify-email/{}", data.config.base_url, token);
-
-	match (email_verification::ActiveModel {
-		uid: Set(user.uid),
-		token: Set(token),
-		expiry: Set(NaiveDateTime::from_timestamp_opt(
-			Utc::now().timestamp() + Duration::minutes(15).num_seconds(),
-			0,
-		)
-		.unwrap()),
-		next: Set(body.next_url.to_owned()),
-	}
-	.insert(&data.connection)
-	.await)
-	{
-		Ok(_) => (),
-		Err(e) => {
-			error!("Unable to insert email verification token. Error: {}", e.to_string());
-			return Either::Left((
-				Json(ApiResponse::ApiError {
-					message: "Internal Server Error".to_string(),
-					error_code: "INTERNAL_SERVER_ERROR".to_string(),
-				}),
-				http::StatusCode::INTERNAL_SERVER_ERROR,
-			));
-		}
-	}
 
 	let email_config = data.config.email.to_owned().unwrap();
 
@@ -136,26 +125,20 @@ pub async fn send_handler(
 pub async fn receive_handler(data: Data<AppState>, path: Path<String>) -> HttpResponse {
 	let token = path.into_inner();
 
-	let mut verification = match email_verification::Entity::find_by_id(&token)
-		.one(&data.connection)
-		.await
-	{
-		Ok(verification) => match verification {
-			Some(verification) => verification,
-			None => {
-				return HttpResponse::NotFound().finish();
-			}
-		},
+	let claims: BTreeMap::<String, String> = match token.verify_with_key(&data.config.secret_key) {
+		Ok(claims) => claims,
 		Err(_) => {
-			return HttpResponse::NotFound().finish();
+			return HttpResponse::BadRequest().finish();
 		}
 	};
 
-	if verification.expiry < Utc::now().naive_utc() {
+	if Utc::now().timestamp() > claims.get("exp").unwrap().parse().unwrap(){
 		return HttpResponse::Gone().finish();
 	}
 
-	let user = match users::Entity::find_by_id(verification.uid)
+	let uid = Uuid::parse_str(claims.get("uid").unwrap()).unwrap();
+
+	let user = match users::Entity::find_by_id(uid)
 		.one(&data.connection)
 		.await
 	{
@@ -181,20 +164,9 @@ pub async fn receive_handler(data: Data<AppState>, path: Path<String>) -> HttpRe
 		}
 	}
 
-	match email_verification::Entity::delete_by_id(&token)
-		.exec(&data.connection)
-		.await
-	{
-		Ok(_) => (),
-		Err(e) => {
-			error!("Unable to delete email verification token. Error: {}", e.to_string());
-			return HttpResponse::InternalServerError().finish();
-		}
-	}
-
-	verification.next.push_str("/?verified=true");
+	let next_url = format!("{}/?verified=true", claims.get("next").unwrap());
 
 	HttpResponse::Ok()
-		.append_header(("Location", verification.next))
+		.append_header(("Location", next_url))
 		.finish()
 }
