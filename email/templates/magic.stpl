@@ -437,7 +437,7 @@
   <![endif]-->
   </head>
   <body>
-    <span class="preheader">Use this link to verify your email. The link is only valid for 24 hours.</span>
+    <span class="preheader">Use this link to reset your password. The link is only valid for 24 hours.</span>
     <table class="email-wrapper" width="100%" cellpadding="0" cellspacing="0" role="presentation">
       <tr>
         <td align="center">
@@ -458,7 +458,7 @@
                     <td class="content-cell">
                       <div class="f-fallback">
                         <h1>Hi <%= name %>,</h1>
-                        <p>Please use the button below to verify your TurboCore account. <strong>This link is only valid for the next 15 minutes.</strong></p>
+                        <p>Please use the button below to login to your TurboCore account.
                         <!-- Action -->
                         <table class="body-action" align="center" width="100%" cellpadding="0" cellspacing="0" role="presentation">
                           <tr>
@@ -468,7 +468,7 @@
                               <table width="100%" border="0" cellspacing="0" cellpadding="0" role="presentation">
                                 <tr>
                                   <td align="center">
-                                    <a href="<%= action_url %>" class="f-fallback button button--green" target="_blank">Verify your account</a>
+                                    <a href="<%= action_url %>" class="f-fallback button button--green" target="_blank">Login to your account</a>
                                   </td>
                                 </tr>
                               </table>

@@ -55,5 +55,7 @@ fn add_routes(cfg: &mut web::ServiceConfig) {
 		.service(auth::delete_user::handler)
 		.service(auth::change_password::handler)
 		.service(auth::email_verify::send_handler)
-		.service(auth::email_verify::receive_handler);
+		.service(auth::email_verify::receive_handler)
+		.service(auth::magic_link::get_handler)
+		.service(auth::magic_link::post_handler);
 }

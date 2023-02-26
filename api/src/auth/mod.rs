@@ -11,6 +11,7 @@ pub mod refresh;
 pub mod reset_password;
 pub mod signup;
 pub mod update_user;
+pub mod magic_link;
 pub mod util;
 
 #[derive(Debug, Serialize)]

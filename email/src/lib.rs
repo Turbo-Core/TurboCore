@@ -3,6 +3,7 @@ use lettre::{AsyncSmtpTransport, Tokio1Executor};
 pub mod forgot_password;
 pub mod manual;
 pub mod verification;
+pub mod magic;
 
 pub struct EmailParams<'a> {
 	pub name: String,

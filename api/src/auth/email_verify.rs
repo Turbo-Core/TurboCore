@@ -88,9 +88,7 @@ pub async fn send_handler(
 
 	let token = Uuid::new_v4().to_string();
 
-	let mut action_link = data.config.base_url.to_owned();
-	action_link.push_str("/api/auth/user/verify-email");
-	action_link.push_str(&token);
+	let action_link = format!("{}/api/auth/user/verify-email/{}", data.config.base_url, token);
 
 	match (email_verification::ActiveModel {
 		uid: Set(user.uid),
@@ -197,6 +195,6 @@ pub async fn receive_handler(data: Data<AppState>, path: Path<String>) -> HttpRe
 	verification.next.push_str("/?verified=true");
 
 	HttpResponse::Ok()
-		.insert_header(("Location", verification.next))
+		.append_header(("Location", verification.next))
 		.finish()
 }
