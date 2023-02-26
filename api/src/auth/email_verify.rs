@@ -18,10 +18,16 @@ use log::error;
 use sea_orm::{ActiveModelTrait, EntityTrait, Set};
 use uuid::Uuid;
 
+#[derive(serde::Deserialize)]
+pub struct VerifyBody {
+	pub next_url: String,
+}
+
 #[post("/api/auth/user/verify-email")]
 pub async fn send_handler(
 	request: actix_web::HttpRequest,
 	data: Data<AppState>,
+	body: Json<VerifyBody>,
 ) -> Either<(Json<ApiResponse>, http::StatusCode), HttpResponse> {
 	let header_map = request.headers();
 	let authorization = header_map.get("Authorization");
@@ -94,7 +100,7 @@ pub async fn send_handler(
 			0,
 		)
 		.unwrap()),
-		next: Set(data.config.base_url.to_owned()),
+		next: Set(body.next_url.to_owned()),
 	}
 	.insert(&data.connection)
 	.await)
@@ -132,7 +138,7 @@ pub async fn send_handler(
 pub async fn receive_handler(data: Data<AppState>, path: Path<String>) -> HttpResponse {
 	let token = path.into_inner();
 
-	let verification = match email_verification::Entity::find_by_id(&token)
+	let mut verification = match email_verification::Entity::find_by_id(&token)
 		.one(&data.connection)
 		.await
 	{
@@ -187,6 +193,8 @@ pub async fn receive_handler(data: Data<AppState>, path: Path<String>) -> HttpRe
 			return HttpResponse::InternalServerError().finish();
 		}
 	}
+
+	verification.next.push_str("/?verified=true");
 
 	HttpResponse::Ok()
 		.insert_header(("Location", verification.next))
