@@ -1,17 +1,15 @@
-<div align="center">
-  <img width="150" height="150" src="http://docs.turbocore.org/logo.svg">
-</div>
-<div id="user-content-toc" align="center">
-  <ul>
-    <summary><h1 style="display: inline-block;">TurboCore</h1></summary>
-  </ul>
-</div>
-TurboCore will be a blazing fast, reliable, and scalable Backend-as-a-service written in Rust.
 
----
-<!--
-<a href='https://www.rust-lang.org/' target="_blank"><img alt='Rust' src='https://img.shields.io/badge/Built_with Rust-100000?style=for-the-badge&logo=Rust&logoColor=FEFEFF&labelColor=010100&color=black'/></a>
--->
+<h2 align="center">
+    <a href="" target="blank_">
+        <img height="150" alt="TurboCore Logo" src="https://docs.turbocore.org/logo.svg" />
+    </a>
+    <br/>
+    <br/>
+    TurboCore: a blazing fast, BaaS written in Rust.
+</h2>
+<div align="center"
+<a href='https://www.rust-lang.org/' target="_blank"><img alt='Rust' src='https://img.shields.io/badge/Built_with Rust-100000?style=for-the-badge&logo=Rust&logoColor=FFFFFF&labelColor=9c1b10&color=c72e20'/></a> <a href="https://github.com/Turbo-Core/TurboCore/actions/workflows/clippy.yml" taget="_blank"><img alt="GitHub Workflow Status (with event)" src="https://img.shields.io/github/actions/workflow/status/Turbo-Core/TurboCore/clippy.yml?event=push&style=for-the-badge"> </a>
+</div>
 
 # Documentation
 Documentation is being worked on along with the code. You can find the current documentation [here](https://docs.turbocore.org). **Note that the documentation is not even close to being complete, and more will be added as the project progresses.**
