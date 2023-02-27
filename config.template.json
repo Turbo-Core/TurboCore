@@ -13,15 +13,16 @@
     },
     "minimum_password_strength": 1,
     "email": {
-        "smtp_server": "smtp.gmail.com",
+        "smtp_server": "smtp.mail.me.com",
         "smtp_port": 587,
-        "smtp_username": "",
+        "smtp_username": "some_username@icloud.com",
         "smtp_password": "a_super_secret_password",
-        "smtp_encryption": "STARTTLS",
+        "smtp_encryption": "TLS",
         "from": "Name <email@example.com>",
         "reply_to": "No Reply <no-reply@example>",
         "magic_link_subject": "Magic link",
         "forgot_password_subject": "Forgot password",
         "confirmation_subject": "Email confirmation"
-    }
+    },
+    "_WANING": "This file has been added to .gitignore. You should not commit it to any public repositories as it contains sensitive information."
 }

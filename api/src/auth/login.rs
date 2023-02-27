@@ -31,6 +31,15 @@ pub async fn handler(data: Data<AppState>, body: Json<LoginBody>) -> impl Respon
 			match user {
 				// User is found
 				Some(user) => {
+					if !user.active {
+						return (
+							Json(ApiResponse::ApiError {
+								message: "The user has been disabled by an administrator.".to_string(),
+								error_code: "USER_DISABLED".to_string(),
+							}),
+							http::StatusCode::UNAUTHORIZED,
+						);
+					}
 					if !argon2::verify_encoded(&user.password, body.password.as_bytes()).unwrap() {
 						return (
 							Json(ApiResponse::ApiError {
