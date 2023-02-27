@@ -20,6 +20,7 @@ use log::error;
 use sea_orm::{ActiveModelTrait, EntityTrait, Set};
 
 use jwt::{SignWithKey, VerifyWithKey};
+use uaparser::Parser;
 use uuid::Uuid;
 
 #[derive(serde::Deserialize)]
@@ -107,6 +108,15 @@ pub async fn send_handler(
 
 	let email_config = data.config.email.to_owned().unwrap();
 
+	let (os, device) = match header_map.get("User-Agent") {
+		Some(user_agent) => {
+			let a = data.ua_parser.parse_os(user_agent.to_str().unwrap()).family;
+			let b = data.ua_parser.parse_device(user_agent.to_str().unwrap()).family;
+			(a.to_string(), b.to_string())
+		},
+		None => ("Unknown".to_string(), "Unknown".to_string()),
+	};
+
 	verification::send(EmailParams {
 		name: user.email.to_owned(),
 		action_url: action_link,
@@ -114,6 +124,8 @@ pub async fn send_handler(
 		from: email_config.from,
 		to: user.email,
 		reply_to: email_config.reply_to,
+		os,
+		device,
 		mailer,
 	})
 	.await;

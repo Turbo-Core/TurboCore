@@ -12,6 +12,8 @@ use crate::EmailParams;
 struct VerificationTemplateHtml {
 	name: String,
 	action_url: String,
+	operating_system: String,
+	device: String,
 }
 
 #[derive(TemplateOnce)]
@@ -25,6 +27,8 @@ pub async fn send(params: EmailParams<'_>) {
 	let html = VerificationTemplateHtml {
 		action_url: params.action_url.clone(),
 		name: params.name.clone(),
+		operating_system: params.os,
+		device: params.device,
 	}
 	.render_once()
 	.unwrap();

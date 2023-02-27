@@ -12,5 +12,7 @@ pub struct EmailParams<'a> {
 	pub from: String,
 	pub to: String,
 	pub reply_to: String,
+	pub os: String,
+	pub device: String,
 	pub mailer: &'a AsyncSmtpTransport<Tokio1Executor>,
 }

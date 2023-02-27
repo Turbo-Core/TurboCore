@@ -4,6 +4,7 @@ mod util;
 
 // Internal
 use api::{auth, AppState};
+use uaparser::UserAgentParser;
 use util::load_config::load_config;
 
 // Actix
@@ -33,10 +34,12 @@ async fn main() -> std::io::Result<()> {
 	Migrator::up(&connection, None).await.unwrap();
 
 	HttpServer::new(move || {
+		let ua_parser = UserAgentParser::from_yaml("regexes.yaml").unwrap();
 		App::new()
 			.app_data(Data::new(AppState {
 				connection: connection.to_owned(),
 				config: config.to_owned(),
+				ua_parser,
 			}))
 			.wrap(middleware::DefaultHeaders::new().add((SERVER, "TurboCore")))
 			.wrap(Logger::default())

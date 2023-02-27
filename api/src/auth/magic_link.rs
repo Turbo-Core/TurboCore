@@ -14,12 +14,13 @@ use actix_web::{
 };
 
 use chrono::{Utc, Duration, NaiveDateTime};
-use email::{verification, EmailParams};
+use email::{magic, EmailParams};
 use entity::users;
 use jwt::{SignWithKey, VerifyWithKey};
 use log::error;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
 use uuid::Uuid;
+use uaparser::Parser;
 
 #[derive(serde::Deserialize)]
 pub struct MagicBody {
@@ -30,6 +31,7 @@ pub struct MagicBody {
 
 #[post("/api/auth/user/magic-link")]
 pub async fn post_handler(
+	request: actix_web::HttpRequest,
 	data: Data<AppState>,
 	body: Json<MagicBody>,
 ) -> Either<(Json<ApiResponse>, http::StatusCode), HttpResponse> {
@@ -131,13 +133,25 @@ pub async fn post_handler(
 
 	let email_config = data.config.email.to_owned().unwrap();
 
-	verification::send(EmailParams {
+	let header_map = request.headers();
+	let (os, device) = match header_map.get("User-Agent") {
+		Some(user_agent) => {
+			let a = data.ua_parser.parse_os(user_agent.to_str().unwrap()).family;
+			let b = data.ua_parser.parse_device(user_agent.to_str().unwrap()).family;
+			(a.to_string(), b.to_string())
+		},
+		None => ("Unknown".to_string(), "Unknown".to_string()),
+	};
+
+	magic::send(EmailParams {
 		name: user.email.to_owned(),
 		action_url,
 		subject: email_config.confirmation_subject,
 		from: email_config.from,
 		to: user.email,
 		reply_to: email_config.reply_to,
+		os,
+		device,
 		mailer,
 	})
 	.await;
