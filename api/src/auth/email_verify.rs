@@ -166,7 +166,7 @@ pub async fn receive_handler(data: Data<AppState>, path: Path<String>) -> HttpRe
 
 	let next_url = format!("{}/?verified=true", claims.get("next").unwrap());
 
-	HttpResponse::Ok()
+	HttpResponse::Found()
 		.append_header(("Location", next_url))
 		.finish()
 }

@@ -45,13 +45,13 @@ pub async fn send(params: EmailParams<'_>) {
 			MultiPart::alternative()
 				.singlepart(
 					SinglePart::builder()
-						.header(ContentType::TEXT_HTML)
-						.body(html),
+						.header(ContentType::TEXT_PLAIN)
+						.body(txt),
 				)
 				.singlepart(
 					SinglePart::builder()
-						.header(ContentType::TEXT_PLAIN)
-						.body(txt),
+						.header(ContentType::TEXT_HTML)
+						.body(html),
 				),
 		);
 	

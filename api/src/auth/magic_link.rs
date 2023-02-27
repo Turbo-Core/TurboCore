@@ -13,7 +13,7 @@ use actix_web::{
 	Either, HttpResponse,
 };
 
-use chrono::{Utc, Duration};
+use chrono::{Utc, Duration, NaiveDateTime};
 use email::{verification, EmailParams};
 use entity::users;
 use jwt::{SignWithKey, VerifyWithKey};
@@ -72,10 +72,15 @@ pub async fn post_handler(
 					));
 				}
                 let uid = Uuid::new_v4();
+				let now = NaiveDateTime::from_timestamp_opt(Utc::now().timestamp(), 0).unwrap();
 				let new_user = users::ActiveModel {
                     uid: Set(uid),
                     password: Set("0".to_string()),
 					email: Set(body.email.to_owned()),
+					created_at: Set(now),
+					updated_at: Set(now),
+					active: Set(true),
+					email_verified: Set(false),
 					..Default::default()
 				};
                 let new_user = new_user.insert(&data.connection).await;
