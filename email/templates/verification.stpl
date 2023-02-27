@@ -475,9 +475,9 @@
                             </td>
                           </tr>
                         </table>
-                        <p>For security, this request was received from a {{operating_system}} device using {{browser_name}}. If you did not create this account, please ignore this email or <a href="{{support_url}}">contact support</a> if you have questions.</p>
+                        <p>For security, this request was received from a <%= device %> using <%= operating_system %>. If you did not create this account, please ignore this email or <a href="mailto:support@turbocore.org">contact support</a> if you have questions.</p>
                         <p>Thanks,
-                          <br>The [Product Name] team</p>
+                          <br>The TurboCore team</p>
                         <!-- Sub copy -->
                         <table class="body-sub" role="presentation">
                           <tr>
