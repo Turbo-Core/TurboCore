@@ -39,6 +39,9 @@ pub async fn handler(
 		HeaderResult::Uid(uid) => uid,
 	};
 
+	// TODO: Check if old_password is a reset token
+	// If it is, reset the password, delete the token and return
+
 	// Check if the new password strength is acceptable
 	let estimate = match zxcvbn(&body.new_password, &[]) {
 		Ok(ent) => ent,
