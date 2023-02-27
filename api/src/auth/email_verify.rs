@@ -111,9 +111,12 @@ pub async fn send_handler(
 	let (os, device) = match header_map.get("User-Agent") {
 		Some(user_agent) => {
 			let a = data.ua_parser.parse_os(user_agent.to_str().unwrap()).family;
-			let b = data.ua_parser.parse_device(user_agent.to_str().unwrap()).family;
+			let b = data
+				.ua_parser
+				.parse_device(user_agent.to_str().unwrap())
+				.family;
 			(a.to_string(), b.to_string())
-		},
+		}
 		None => ("Unknown".to_string(), "Unknown".to_string()),
 	};
 
@@ -137,23 +140,20 @@ pub async fn send_handler(
 pub async fn receive_handler(data: Data<AppState>, path: Path<String>) -> HttpResponse {
 	let token = path.into_inner();
 
-	let claims: BTreeMap::<String, String> = match token.verify_with_key(&data.config.secret_key) {
+	let claims: BTreeMap<String, String> = match token.verify_with_key(&data.config.secret_key) {
 		Ok(claims) => claims,
 		Err(_) => {
 			return HttpResponse::BadRequest().finish();
 		}
 	};
 
-	if Utc::now().timestamp() > claims.get("exp").unwrap().parse().unwrap(){
+	if Utc::now().timestamp() > claims.get("exp").unwrap().parse().unwrap() {
 		return HttpResponse::Gone().finish();
 	}
 
 	let uid = Uuid::parse_str(claims.get("uid").unwrap()).unwrap();
 
-	let user = match users::Entity::find_by_id(uid)
-		.one(&data.connection)
-		.await
-	{
+	let user = match users::Entity::find_by_id(uid).one(&data.connection).await {
 		Ok(user) => match user {
 			Some(user) => user,
 			None => {

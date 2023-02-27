@@ -7,11 +7,11 @@ pub mod email_verify;
 pub mod get_user;
 pub mod login;
 pub mod logout;
+pub mod magic_link;
 pub mod refresh;
 pub mod reset_password;
 pub mod signup;
 pub mod update_user;
-pub mod magic_link;
 pub mod util;
 
 #[derive(Debug, Serialize)]

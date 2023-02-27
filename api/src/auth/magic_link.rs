@@ -1,10 +1,7 @@
 use std::collections::BTreeMap;
 
 use crate::{
-	auth::{
-        util::get_at_and_rt,
-		ApiResponse,
-	},
+	auth::{util::get_at_and_rt, ApiResponse},
 	AppState,
 };
 use actix_web::{
@@ -13,14 +10,14 @@ use actix_web::{
 	Either, HttpResponse,
 };
 
-use chrono::{Utc, Duration, NaiveDateTime};
+use chrono::{Duration, NaiveDateTime, Utc};
 use email::{magic, EmailParams};
 use entity::users;
 use jwt::{SignWithKey, VerifyWithKey};
 use log::error;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
-use uuid::Uuid;
 use uaparser::Parser;
+use uuid::Uuid;
 
 #[derive(serde::Deserialize)]
 pub struct MagicBody {
@@ -73,11 +70,11 @@ pub async fn post_handler(
 						http::StatusCode::BAD_REQUEST,
 					));
 				}
-                let uid = Uuid::new_v4();
+				let uid = Uuid::new_v4();
 				let now = NaiveDateTime::from_timestamp_opt(Utc::now().timestamp(), 0).unwrap();
 				let new_user = users::ActiveModel {
-                    uid: Set(uid),
-                    password: Set("0".to_string()),
+					uid: Set(uid),
+					password: Set("0".to_string()),
 					email: Set(body.email.to_owned()),
 					created_at: Set(now),
 					updated_at: Set(now),
@@ -85,20 +82,20 @@ pub async fn post_handler(
 					email_verified: Set(false),
 					..Default::default()
 				};
-                let new_user = new_user.insert(&data.connection).await;
-                match new_user {
-                    Ok(user) => user,
-                    Err(e) => {
-                        error!("Unable to create user. Error: {}", e.to_string());
-                        return Either::Left((
-                            Json(ApiResponse::ApiError {
-                                message: "Internal Server Error".to_string(),
-                                error_code: "INTERNAL_SERVER_ERROR".to_string(),
-                            }),
-                            http::StatusCode::INTERNAL_SERVER_ERROR,
-                        ));
-                    }
-                }
+				let new_user = new_user.insert(&data.connection).await;
+				match new_user {
+					Ok(user) => user,
+					Err(e) => {
+						error!("Unable to create user. Error: {}", e.to_string());
+						return Either::Left((
+							Json(ApiResponse::ApiError {
+								message: "Internal Server Error".to_string(),
+								error_code: "INTERNAL_SERVER_ERROR".to_string(),
+							}),
+							http::StatusCode::INTERNAL_SERVER_ERROR,
+						));
+					}
+				}
 			}
 		},
 		Err(e) => {
@@ -124,10 +121,7 @@ pub async fn post_handler(
 
 	let token = claims.sign_with_key(&data.config.secret_key).unwrap();
 
-    let action_url = format!(
-        "{}/api/auth/user/magic-link/{}",
-        data.config.base_url, token
-    );
+	let action_url = format!("{}/api/auth/user/magic-link/{}", data.config.base_url, token);
 
 	let mailer = data.config.mailer.as_ref().unwrap();
 
@@ -137,9 +131,12 @@ pub async fn post_handler(
 	let (os, device) = match header_map.get("User-Agent") {
 		Some(user_agent) => {
 			let a = data.ua_parser.parse_os(user_agent.to_str().unwrap()).family;
-			let b = data.ua_parser.parse_device(user_agent.to_str().unwrap()).family;
+			let b = data
+				.ua_parser
+				.parse_device(user_agent.to_str().unwrap())
+				.family;
 			(a.to_string(), b.to_string())
-		},
+		}
 		None => ("Unknown".to_string(), "Unknown".to_string()),
 	};
 
@@ -159,11 +156,10 @@ pub async fn post_handler(
 	Either::Right(HttpResponse::Ok().finish())
 }
 
-
 #[get("/api/auth/user/magic-link/{uid}")]
 pub async fn get_handler(data: Data<AppState>, path: Path<String>) -> HttpResponse {
 	let token = path.into_inner();
-    let claims: BTreeMap<String, String> = match token.verify_with_key(&data.config.secret_key) {
+	let claims: BTreeMap<String, String> = match token.verify_with_key(&data.config.secret_key) {
 		Ok(claims) => claims,
 		Err(e) => {
 			error!("Unable to verify token. Error: {}", e.to_string());
@@ -190,37 +186,35 @@ pub async fn get_handler(data: Data<AppState>, path: Path<String>) -> HttpRespon
 
 	let uid = Uuid::parse_str(&claims["uid"]).unwrap();
 
-    let user = match users::Entity::find()
-        .filter(users::Column::Uid.eq(uid))
-        .one(&data.connection)
-        .await
-    {
-        Ok(user) => match user {
-            Some(user) => user,
-            None => {
-                return HttpResponse::BadRequest().json(ApiResponse::ApiError {
-                    message: "The user does not exist.".to_string(),
-                    error_code: "USER_DOES_NOT_EXIST".to_string(),
-                })
-            }
-        },
-        Err(e) => {
-            error!("Unable to find user. Error: {}", e.to_string());
-            return HttpResponse::InternalServerError().json(ApiResponse::ApiError {
-                message: "Internal Server Error".to_string(),
-                error_code: "INTERNAL_SERVER_ERROR".to_string(),
-            });
-        }
-    };
+	let user = match users::Entity::find()
+		.filter(users::Column::Uid.eq(uid))
+		.one(&data.connection)
+		.await
+	{
+		Ok(user) => match user {
+			Some(user) => user,
+			None => {
+				return HttpResponse::BadRequest().json(ApiResponse::ApiError {
+					message: "The user does not exist.".to_string(),
+					error_code: "USER_DOES_NOT_EXIST".to_string(),
+				})
+			}
+		},
+		Err(e) => {
+			error!("Unable to find user. Error: {}", e.to_string());
+			return HttpResponse::InternalServerError().json(ApiResponse::ApiError {
+				message: "Internal Server Error".to_string(),
+				error_code: "INTERNAL_SERVER_ERROR".to_string(),
+			});
+		}
+	};
 
-    let (at, rt, exp) = get_at_and_rt(&data.connection, &user.uid.to_string(), &data.config.secret_key).await;
+	let (at, rt, exp) =
+		get_at_and_rt(&data.connection, &user.uid.to_string(), &data.config.secret_key).await;
 
-    let redirect_url = format!(
-        "{}?at={}&rt={}&exp={}",
-        claims["next"], at, rt, exp
-    );
+	let redirect_url = format!("{}?at={}&rt={}&exp={}", claims["next"], at, rt, exp);
 
-    HttpResponse::Found()
-        .append_header(("Location", redirect_url))
-        .finish()
+	HttpResponse::Found()
+		.append_header(("Location", redirect_url))
+		.finish()
 }

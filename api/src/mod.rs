@@ -53,5 +53,5 @@ pub struct EmailConfig {
 pub struct AppState {
 	pub connection: sea_orm::DatabaseConnection,
 	pub config: Config,
-	pub ua_parser: uaparser::UserAgentParser
+	pub ua_parser: uaparser::UserAgentParser,
 }

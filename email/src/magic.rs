@@ -2,8 +2,8 @@ use lettre::message::header::ContentType;
 use lettre::message::{MultiPart, SinglePart};
 use lettre::AsyncTransport;
 use lettre::Message;
-use sailfish::TemplateOnce;
 use log::error;
+use sailfish::TemplateOnce;
 
 use crate::EmailParams;
 
@@ -13,7 +13,7 @@ struct MagicTemplateHtml {
 	name: String,
 	action_url: String,
 	operating_system: String,
-	device: String
+	device: String,
 }
 
 #[derive(TemplateOnce)]
@@ -58,14 +58,13 @@ pub async fn send(params: EmailParams<'_>) {
 						.body(txt),
 				),
 		);
-	
+
 	let email = match email {
 		Ok(email) => email,
 		Err(err) => {
 			error!("Failed to build email: {err}");
 			return;
 		}
-		
 	};
 
 	match params.mailer.send(email).await {
