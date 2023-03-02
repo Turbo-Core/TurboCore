@@ -21,14 +21,16 @@ struct PasswordTemplateHtml {
 struct PasswordTemplateTxt {
 	name: String,
 	action_url: String,
+	operating_system: String,
+	device: String,
 }
 
 pub async fn send(params: EmailParams<'_>) {
 	let html = PasswordTemplateHtml {
 		action_url: params.action_url.clone(),
 		name: params.name.clone(),
-		operating_system: params.os,
-		device: params.device,
+		operating_system: params.os.clone(),
+		device: params.device.clone(),
 	}
 	.render_once()
 	.unwrap();
@@ -36,6 +38,8 @@ pub async fn send(params: EmailParams<'_>) {
 	let txt = PasswordTemplateTxt {
 		action_url: params.action_url,
 		name: params.name,
+		operating_system: params.os,
+		device: params.device,
 	}
 	.render_once()
 	.unwrap();

@@ -11,11 +11,11 @@ use actix_web::{
 };
 use argon2::{Config as ArgonConfig, ThreadMode, Variant, Version};
 use chrono::Utc;
-use entity::{password_reset_tokens, users};
+use entity::{users};
 use jwt::VerifyWithKey;
 use log::error;
 use rand::{thread_rng, Rng};
-use sea_orm::{ActiveModelTrait, EntityTrait, Set, ModelTrait};
+use sea_orm::{ActiveModelTrait, EntityTrait, Set};
 use serde::Deserialize;
 use zxcvbn::zxcvbn;
 
@@ -74,11 +74,11 @@ pub async fn handler(
 			http::StatusCode::BAD_REQUEST,
 		));
 	}
-	
-	// This variable will be used to store the password reset token model if the old password is a reset token
-	let mut reset_token_model: Option<password_reset_tokens::Model> = None;
 
-	// Check if old_password is a reset token
+	// The password check will be skipped if and only if the old password is a valid reset token
+	let mut skip_password_check = false;
+
+	// If old_password is a reset token, verify it, and skip the password check
 	let claims = match body.old_password.verify_with_key(&data.config.secret_key) {
 		Ok::<BTreeMap<String, String>, _>(claims) => Some(claims),
 		Err(_) => {
@@ -107,37 +107,11 @@ pub async fn handler(
 			));
 		}
 		
-		match password_reset_tokens::Entity::find_by_id(&claims["token"])
-			.one(&data.connection)
-			.await
-		{
-			Ok(model) => {
-				if model.is_none() {
-					return Either::Left((
-						Json(ApiResponse::ApiError {
-							message: "The password reset token provided is invalid.".to_string(),
-							error_code: "INVALID_TOKEN".to_string(),
-						}),
-						http::StatusCode::BAD_REQUEST,
-					));
-				}
-				// If the token is valid, we'll store the model in the reset_token_model variable to be deleted later
-				reset_token_model = Some(model.unwrap());
-			}
-			Err(e) => {
-				error!("Error while finding password reset token: {}", e);
-				return Either::Left((
-					Json(ApiResponse::ApiError {
-						message: "An error occurred while processing your request.".to_string(),
-						error_code: "INTERNAL_SERVER_ERROR".to_string(),
-					}),
-					http::StatusCode::INTERNAL_SERVER_ERROR,
-				));
-			}
-		}
+		// Token is valid, so we'll skip the password check
+		skip_password_check = true;
 	}
 
-	// If the new password strength is good, we wil find the user and verify their password if they're not using a reset token
+	// Next, we wil find the user and verify their password if they're not using a reset token
 	let user = match users::Entity::find_by_id(uid).one(&data.connection).await {
 		Ok(user_model) => match user_model {
 			Some(user_model) => user_model,
@@ -164,7 +138,7 @@ pub async fn handler(
 	};
 
 	// If the old password is not a reset token, then we'll verify it
-	if reset_token_model.is_none() && !argon2::verify_encoded(&user.password, body.old_password.as_bytes()).unwrap() {
+	if skip_password_check && !argon2::verify_encoded(&user.password, body.old_password.as_bytes()).unwrap() {
 		return Either::Left((
 			Json(ApiResponse::ApiError {
 				message: "The email or password is invalid".to_string(),
@@ -207,23 +181,6 @@ pub async fn handler(
 				}),
 				http::StatusCode::INTERNAL_SERVER_ERROR,
 			));
-		}
-	}
-
-	// If the old password was a reset token, we'll delete it
-	if let Some(token) = reset_token_model {
-		match token.delete(&data.connection).await {
-			Ok(_) => (),
-			Err(e) => {
-				error!("Failed to delete password reset token. Error: {}", e.to_string());
-				return Either::Left((
-					Json(ApiResponse::ApiError {
-						message: "Failed to change the password.".to_string(),
-						error_code: "INTERNAL_SERVER_ERROR".to_string(),
-					}),
-					http::StatusCode::INTERNAL_SERVER_ERROR,
-				));
-			}
 		}
 	}
 

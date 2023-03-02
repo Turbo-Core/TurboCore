@@ -4,12 +4,12 @@ use actix_web::{
 	http, post,
 	web::{Data, Json}, Either, HttpResponse,
 };
-use chrono::{Utc, Duration, NaiveDateTime};
+use chrono::{Utc, Duration};
 use jwt::SignWithKey;
 use log::error;
-use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, Set, ActiveModelTrait};
+use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use serde::Deserialize;
-use entity::{users, password_reset_tokens};
+use entity::users;
 use uaparser::Parser;
 use email::{forgot_password, EmailParams};
 
@@ -65,6 +65,7 @@ pub async fn handler(
         }
     };
 
+    // Generate a reset token
     let exp = Utc::now().timestamp() + Duration::minutes(15).num_seconds();
     let exp_str = exp.to_string();
     let uid = user.uid.to_string();
@@ -77,14 +78,6 @@ pub async fn handler(
 	claims.insert("type", "password_reset");
 
     let reset_token = claims.sign_with_key(&data.config.secret_key).unwrap();
-
-    let token_entry = password_reset_tokens::ActiveModel {
-        uid: Set(user.uid),
-        token: Set(reset_token.clone()),
-        expiry: Set(NaiveDateTime::from_timestamp_opt(exp, 0).unwrap()),
-    };
-
-    token_entry.insert(&data.connection).await; 
 
     let action_url = format!("{}?token={}", body.reset_url, reset_token);
 
@@ -100,6 +93,7 @@ pub async fn handler(
 		None => ("Unknown".to_string(), "Unknown".to_string()),
 	};
 
+    // Send the reset email
     forgot_password::send(EmailParams {
 		name: body.email.to_owned(),
 		action_url,
