@@ -44,6 +44,14 @@ impl MigrationTrait for Migration {
 					.to_owned(),
 			)
 			.await?;
+		manager.create_table(
+			Table::create()
+				.table(PasswordResetToken::Table).if_not_exists()
+				.col(ColumnDef::new(PasswordResetToken::Uid).uuid().not_null())
+				.col(ColumnDef::new(PasswordResetToken::Token).string().not_null().primary_key())
+				.col(ColumnDef::new(PasswordResetToken::Expiry).date_time().not_null())
+				.to_owned()
+		).await?;
 		manager
 			.create_index(
 				sea_query::Index::create()
@@ -84,7 +92,8 @@ impl MigrationTrait for Migration {
 					.if_exists()
 					.to_owned(),
 			)
-			.await
+			.await?;
+		manager.drop_table(Table::drop().table(PasswordResetToken::Table).if_exists().to_owned()).await
 	}
 }
 
@@ -112,4 +121,14 @@ enum RefreshTokenEntry {
 	RefreshToken,
 	Expiry,
 	Used,
+}
+
+
+#[derive(Iden)]
+enum PasswordResetToken {
+	#[iden = "password_reset_tokens"]
+	Table,
+	Uid,
+	Token,
+	Expiry
 }
