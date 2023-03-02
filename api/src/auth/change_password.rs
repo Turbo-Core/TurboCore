@@ -96,6 +96,17 @@ pub async fn handler(
 				http::StatusCode::BAD_REQUEST,
 			));
 		}
+
+		if claims["type"] != "password_reset" {
+			return Either::Left((
+				Json(ApiResponse::ApiError {
+					message: "The password reset token provided is invalid.".to_string(),
+					error_code: "INVALID_TOKEN".to_string(),
+				}),
+				http::StatusCode::BAD_REQUEST,
+			));
+		}
+		
 		match password_reset_tokens::Entity::find_by_id(&claims["token"])
 			.one(&data.connection)
 			.await

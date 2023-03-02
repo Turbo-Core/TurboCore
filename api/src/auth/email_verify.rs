@@ -100,6 +100,7 @@ pub async fn send_handler(
 	claims.insert("iss", "TurboCore");
 	claims.insert("uid", &uid_str);
 	claims.insert("exp", &exp_str);
+	claims.insert("type", "email_verify");
 	claims.insert("next", &next_url);
 
 	let token = claims.sign_with_key(&data.config.secret_key).unwrap();
@@ -149,6 +150,10 @@ pub async fn receive_handler(data: Data<AppState>, path: Path<String>) -> HttpRe
 
 	if Utc::now().timestamp() > claims.get("exp").unwrap().parse().unwrap() {
 		return HttpResponse::Gone().finish();
+	}
+
+	if claims["type"] != "email_verify" {
+		return HttpResponse::BadRequest().finish();
 	}
 
 	let uid = Uuid::parse_str(claims.get("uid").unwrap()).unwrap();

@@ -24,6 +24,7 @@ pub struct RefreshBody {
 
 #[post("/api/auth/user/refresh")]
 pub async fn handler(data: Data<AppState>, body: Json<RefreshBody>) -> impl Responder {
+	// Try to verify JWT
 	let claims: BTreeMap<String, String> =
 		match body.refresh_token.verify_with_key(&data.config.secret_key) {
 			Ok(c) => c,
@@ -38,12 +39,35 @@ pub async fn handler(data: Data<AppState>, body: Json<RefreshBody>) -> impl Resp
 			}
 		};
 
+	// Check if RT is expired
+	if Utc::now().timestamp() > claims["get"].parse().unwrap() {
+		return (
+			Json(ApiResponse::ApiError {
+				message: "The JWT provided has already expired. Please log in again".to_string(),
+				error_code: "EXPIRED_JWT".to_string(),
+			}),
+			http::StatusCode::UNAUTHORIZED,
+		);
+	}
+
+	// Check if th token is indeed an RT
+	if claims["type"] != "rt" {
+		return (
+			Json(ApiResponse::ApiError {
+				message: "The provided refresh token is invalid".to_string(),
+				error_code: "INVALID_JWT".to_string(),
+			}),
+			http::StatusCode::UNAUTHORIZED,
+		);
+	}
+
+	// Look for RT in DB
 	let res = refresh_tokens::Entity::find()
 		.filter(refresh_tokens::Column::RefreshToken.eq(&body.refresh_token))
 		.one(&data.connection)
 		.await;
 
-	let uid = claims.get("uid").unwrap().to_string();
+	let uid = claims["uid"].to_string();
 
 	match res {
 		Err(err) => match err {
@@ -71,7 +95,7 @@ pub async fn handler(data: Data<AppState>, body: Json<RefreshBody>) -> impl Resp
 			match rt_model {
 				Some(rt) => {
 					if rt.used {
-						// Again, revoke all RTs, it has been used
+						// Again, revoke all RTs, reuse of RT is not allowed
 						delete_old_rt(&uid, &data.connection).await;
 						return (
 							Json(ApiResponse::ApiError {
@@ -84,29 +108,27 @@ pub async fn handler(data: Data<AppState>, body: Json<RefreshBody>) -> impl Resp
 						);
 					}
 
-					if Utc::now().timestamp() < claims.get("exp").unwrap().parse().unwrap() {
-						// First, mark the old token as used
-						let mut rt_update: ActiveModel = rt.into();
-						rt_update.used = Set(true);
-						match rt_update.update(&data.connection).await {
-							Ok(_) => (),
-							Err(_) => log::error!("Failed to mark refresh token as used"),
-						}
-
-						// Here is the only time we issue a new token, when not expired, and not used
-						let (access_token, refresh_token, expiry) =
-							get_at_and_rt(&data.connection, &uid, &data.config.secret_key).await;
-
-						return (
-							Json(ApiResponse::RefreshResponse {
-								uid,
-								access_token,
-								refresh_token,
-								expiry,
-							}),
-							http::StatusCode::OK,
-						);
+					// First, mark the old token as used
+					let mut rt_update: ActiveModel = rt.into();
+					rt_update.used = Set(true);
+					match rt_update.update(&data.connection).await {
+						Ok(_) => (),
+						Err(_) => log::error!("Failed to mark refresh token as used"),
 					}
+
+					// Here is the only time we issue a new token
+					let (access_token, refresh_token, expiry) =
+						get_at_and_rt(&data.connection, &uid, &data.config.secret_key).await;
+
+					return (
+						Json(ApiResponse::RefreshResponse {
+							uid,
+							access_token,
+							refresh_token,
+							expiry,
+						}),
+						http::StatusCode::OK,
+					);
 				}
 				None => {
 					// Record not found, revoke all RTs
