@@ -20,7 +20,9 @@ sha2 = "0.10.6"
 rust-argon2 = "1.0.0"
 lettre = { version = "0.10", features = ["tokio1-native-tls"]}
 uaparser = "0.6.0"
-# Sea-ORM
+tokio = "1.26.0"
+chrono = {version = "0.4.23", default-features = false }
+# Database and related
 entity = { path = "entity" }
 migration = { path = "migration" }
 api = { path = "api" }
@@ -33,3 +35,4 @@ sea-orm = { version = "^0", features = [
     "with-uuid",
     "with-json",
 ] }
+clokwerk = "0.4.0"
