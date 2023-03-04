@@ -435,7 +435,19 @@ mod tests {
 		let res = verify_header(header_map.get("authorization"), &key);
 
 		match res {
-			HeaderResult::Uid(u) => assert_eq!(u, Uuid::from_str(uid).unwrap()),
+			HeaderResult::Error(json, code) => {
+				assert_eq!(code, http::StatusCode::UNAUTHORIZED);
+				let json = json.into_inner();
+				match json {
+					ApiResponse::ApiError {
+						message: _,
+						error_code,
+					} => {
+						assert_eq!(error_code, "BAD_TOKEN");
+					}
+					_ => assert!(false),
+				}
+			}
 			_ => assert!(false),
 		}
 	}
