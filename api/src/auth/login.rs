@@ -34,7 +34,8 @@ pub async fn handler(data: Data<AppState>, body: Json<LoginBody>) -> impl Respon
 					if !user.active {
 						return (
 							Json(ApiResponse::ApiError {
-								message: "The user has been disabled by an administrator.".to_string(),
+								message: "The user has been disabled by an administrator."
+									.to_string(),
 								error_code: "USER_DISABLED".to_string(),
 							}),
 							http::StatusCode::UNAUTHORIZED,

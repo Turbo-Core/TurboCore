@@ -164,15 +164,14 @@ pub enum HeaderResult {
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use entity::refresh_tokens;
-	use migration::TableCreateStatement;
-	use sea_orm::{Schema, DbBackend, ConnectionTrait};
-	use hmac::{Hmac, Mac};
 	use actix_web::http::header;
+	use entity::refresh_tokens;
+	use hmac::{Hmac, Mac};
+	use migration::TableCreateStatement;
+	use sea_orm::{ConnectionTrait, DbBackend, Schema};
 
 	#[actix_web::test]
 	async fn test_get_at_and_rt() {
-
 		let uid = "6755d7b1-38f2-4a3a-b872-98d0e7bbd1ee";
 
 		// Create a connection to a test database
@@ -183,14 +182,15 @@ mod tests {
 		let stmt: TableCreateStatement = schema.create_table_from_entity(refresh_tokens::Entity);
 
 		let _result = connection
-        	.execute(connection.get_database_backend().build(&stmt))
-        	.await.unwrap();
+			.execute(connection.get_database_backend().build(&stmt))
+			.await
+			.unwrap();
 
 		// Create Hmac key
 		let key: Hmac<sha2::Sha256> = Hmac::new_from_slice(b"a_very_long_secret_key").unwrap();
 
 		// Create a new at and rt pair
-		let (at, rt, exp) = get_at_and_rt(&connection, &uid.to_string(), &key,).await;
+		let (at, rt, exp) = get_at_and_rt(&connection, &uid.to_string(), &key).await;
 
 		// Verify the at
 		let claims: BTreeMap<String, String> = at.verify_with_key(&key).unwrap();
@@ -211,7 +211,11 @@ mod tests {
 		assert_eq!(claims["iss"], "TurboCore");
 
 		// Verify that the rt is in the database
-		let rt = refresh_tokens::Entity::find_by_id(rt).one(&connection).await.unwrap().unwrap();
+		let rt = refresh_tokens::Entity::find_by_id(rt)
+			.one(&connection)
+			.await
+			.unwrap()
+			.unwrap();
 		assert_eq!(rt.uid, Uuid::from_str(uid).unwrap());
 
 		// Close the connection
@@ -220,7 +224,6 @@ mod tests {
 
 	#[test]
 	fn test_good_header() {
-
 		let uid = "6755d7b1-38f2-4a3a-b872-98d0e7bbd1ee";
 
 		// Create Hmac key
@@ -238,7 +241,7 @@ mod tests {
 		let request = actix_web::test::TestRequest::default()
 			.insert_header((header::AUTHORIZATION, format!("Bearer {}", at)))
 			.to_http_request();
-  		let header_map = request.headers();
+		let header_map = request.headers();
 
 		// Test the header
 		let res = verify_header(header_map.get("authorization"), &key);
@@ -247,7 +250,6 @@ mod tests {
 			HeaderResult::Uid(u) => assert_eq!(u, Uuid::from_str(uid).unwrap()),
 			_ => assert!(false),
 		}
-
 	}
 
 	#[test]
@@ -272,7 +274,7 @@ mod tests {
 		let request = actix_web::test::TestRequest::default()
 			.insert_header((header::AUTHORIZATION, format!("Bearer {}", at)))
 			.to_http_request();
-  		let header_map = request.headers();
+		let header_map = request.headers();
 
 		// Test the header
 		let res = verify_header(header_map.get("authorization"), &key2);
@@ -282,12 +284,15 @@ mod tests {
 				assert_eq!(code, http::StatusCode::UNAUTHORIZED);
 				let json = json.into_inner();
 				match json {
-					ApiResponse::ApiError { message: _, error_code } => {
+					ApiResponse::ApiError {
+						message: _,
+						error_code,
+					} => {
 						assert_eq!(error_code, "BAD_TOKEN");
-					},
+					}
 					_ => assert!(false),
 				}
-			},
+			}
 			_ => assert!(false),
 		}
 	}
@@ -304,12 +309,15 @@ mod tests {
 				assert_eq!(code, http::StatusCode::UNAUTHORIZED);
 				let json = json.into_inner();
 				match json {
-					ApiResponse::ApiError { message: _, error_code } => {
+					ApiResponse::ApiError {
+						message: _,
+						error_code,
+					} => {
 						assert_eq!(error_code, "NOT_AUTHENTICATED");
-					},
+					}
 					_ => assert!(false),
 				}
-			},
+			}
 			_ => assert!(false),
 		}
 	}
@@ -333,7 +341,7 @@ mod tests {
 		let request = actix_web::test::TestRequest::default()
 			.insert_header((header::AUTHORIZATION, format!("Beerer {}", at))) // Misspelled Bearer
 			.to_http_request();
-  		let header_map = request.headers();
+		let header_map = request.headers();
 
 		// Test the header
 		let res = verify_header(header_map.get("authorization"), &key);
@@ -343,14 +351,16 @@ mod tests {
 				assert_eq!(code, http::StatusCode::BAD_REQUEST);
 				let json = json.into_inner();
 				match json {
-					ApiResponse::ApiError { message: _, error_code } => {
+					ApiResponse::ApiError {
+						message: _,
+						error_code,
+					} => {
 						assert_eq!(error_code, "BAD_HEADER");
-					},
+					}
 					_ => assert!(false),
 				}
-			},
+			}
 			_ => assert!(false),
 		}
 	}
-
 }

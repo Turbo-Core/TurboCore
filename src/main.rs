@@ -3,17 +3,24 @@
 mod util;
 
 // Internal
-use api::{auth::{self}, AppState};
+use api::{
+	auth::{self},
+	AppState,
+};
+use tokio::{
+	spawn,
+	time::{sleep, Duration},
+};
 use uaparser::UserAgentParser;
 use util::{load_config::load_config, prune_database};
-use tokio::{spawn, time::{sleep, Duration}};
 
 // Actix
 use actix_web::{
-	http::{header::SERVER, self, StatusCode},
+	body::BoxBody,
+	http::{self, header::SERVER, StatusCode},
 	middleware::{self, Logger},
-	web::{self, Data, BytesMut},
-	App, HttpServer, ResponseError, HttpResponse, body::BoxBody,
+	web::{self, BytesMut, Data},
+	App, HttpResponse, HttpServer, ResponseError,
 };
 
 // Sea-ORM
@@ -42,10 +49,12 @@ async fn main() -> std::io::Result<()> {
 
 	// Build the scheduler and add a job to it
 	let mut scheduler = AsyncScheduler::new();
-	scheduler.every(15.minutes()).run(move || prune_database::run(connection2.to_owned()));
+	scheduler
+		.every(15.minutes())
+		.run(move || prune_database::run(connection2.to_owned()));
 
 	// Move the scheduler into a new thread
-	spawn (async move {
+	spawn(async move {
 		loop {
 			scheduler.run_pending().await;
 			sleep(Duration::from_secs(10)).await;
@@ -56,15 +65,15 @@ async fn main() -> std::io::Result<()> {
 
 	HttpServer::new(move || {
 		let ua_parser = UserAgentParser::from_yaml("regexes.yaml").unwrap();
-		
-		let json_cfg = web::JsonConfig::default()
-		.error_handler(|err, _req| {
+
+		let json_cfg = web::JsonConfig::default().error_handler(|err, _req| {
 			let err = format!("Error parsing JSON: {err}");
 			log::warn!("{err}");
 			JsonError {
 				message: err,
 				error_code: "JSON_ERROR".to_string(),
-			}.into()
+			}
+			.into()
 		});
 
 		App::new()
@@ -118,18 +127,21 @@ impl ResponseError for JsonError {
 	}
 
 	fn error_response(&self) -> HttpResponse<BoxBody> {
-        let mut res = HttpResponse::new(self.status_code());
+		let mut res = HttpResponse::new(self.status_code());
 
 		res.headers_mut().insert(
 			http::header::CONTENT_TYPE,
 			http::header::HeaderValue::from_static("application/json"),
 		);
 
-		let box_body = BoxBody::new(BytesMut::from(format!(
-			"{{\"message\": \"{}\", \"error_code\": \"{}\"}}",
-			self.message, self.error_code
-		).as_bytes()));
+		let box_body = BoxBody::new(BytesMut::from(
+			format!(
+				"{{\"message\": \"{}\", \"error_code\": \"{}\"}}",
+				self.message, self.error_code
+			)
+			.as_bytes(),
+		));
 
 		res.set_body(box_body)
-    }
+	}
 }

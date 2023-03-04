@@ -11,7 +11,7 @@ use actix_web::{
 };
 use argon2::{Config as ArgonConfig, ThreadMode, Variant, Version};
 use chrono::Utc;
-use entity::{users};
+use entity::users;
 use jwt::VerifyWithKey;
 use log::error;
 use rand::{thread_rng, Rng};
@@ -106,7 +106,7 @@ pub async fn handler(
 				http::StatusCode::BAD_REQUEST,
 			));
 		}
-		
+
 		// Token is valid, so we'll skip the password check
 		skip_password_check = true;
 	}
@@ -138,7 +138,9 @@ pub async fn handler(
 	};
 
 	// If the old password is not a reset token, then we'll verify it
-	if skip_password_check && !argon2::verify_encoded(&user.password, body.old_password.as_bytes()).unwrap() {
+	if skip_password_check
+		&& !argon2::verify_encoded(&user.password, body.old_password.as_bytes()).unwrap()
+	{
 		return Either::Left((
 			Json(ApiResponse::ApiError {
 				message: "The email or password is invalid".to_string(),

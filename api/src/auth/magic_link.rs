@@ -212,7 +212,8 @@ pub async fn get_handler(data: Data<AppState>, path: Path<String>) -> HttpRespon
 	let (at, rt, exp) =
 		get_at_and_rt(&data.connection, &user.uid.to_string(), &data.config.secret_key).await;
 
-	let redirect_url = format!("{}?uid={}?at={}&rt={}&exp={}", user.uid, claims["next"], at, rt, exp);
+	let redirect_url =
+		format!("{}?uid={}?at={}&rt={}&exp={}", user.uid, claims["next"], at, rt, exp);
 
 	HttpResponse::Found()
 		.append_header(("Location", redirect_url))
