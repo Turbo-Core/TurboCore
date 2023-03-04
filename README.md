@@ -8,7 +8,7 @@
     TurboCore: a blazing fast, BaaS written in Rust.
 </h2>
 <div align="center"
-<a href='https://www.rust-lang.org/' target="_blank"><img alt='Rust' src='https://img.shields.io/badge/Built_with Rust-100000?style=for-the-badge&logo=Rust&logoColor=FFFFFF&labelColor=9c1b10&color=c72e20'/></a> <a href="https://github.com/Turbo-Core/TurboCore/actions/workflows/clippy.yml" taget="_blank"><img alt="GitHub Workflow Status (with event)" src="https://img.shields.io/github/actions/workflow/status/Turbo-Core/TurboCore/tests.yml?event=push&style=for-the-badge"> </a>
+<a href='https://www.rust-lang.org/' target="_blank"><img alt='Rust' src='https://img.shields.io/badge/Built_with Rust-100000?style=for-the-badge&logo=Rust&logoColor=FFFFFF&labelColor=9c1b10&color=c72e20'/></a> <a href="https://github.com/Turbo-Core/TurboCore/actions/workflows/tests.yml" taget="_blank"><img alt="GitHub Workflow Status (with event)" src="https://img.shields.io/github/actions/workflow/status/Turbo-Core/TurboCore/tests.yml?event=push&style=for-the-badge"> </a>
 </div>
 
 # Documentation
