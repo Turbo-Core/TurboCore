@@ -160,3 +160,60 @@ pub enum HeaderResult {
 	Error(Json<ApiResponse>, StatusCode),
 	Uid(Uuid),
 }
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+	use entity::refresh_tokens;
+	use migration::TableCreateStatement;
+	use sea_orm::{Schema, DbBackend, ConnectionTrait};
+	use hmac::{Hmac, Mac};
+
+	#[actix_rt::test]
+	async fn test_get_at_and_rt() {
+
+		let uid = "6755d7b1-38f2-4a3a-b872-98d0e7bbd1ee";
+
+		// Create a connection to a test database
+		let connection = sea_orm::Database::connect("sqlite::memory:").await.unwrap();
+
+		// Create the schema
+		let schema = Schema::new(DbBackend::Sqlite);
+		let stmt: TableCreateStatement = schema.create_table_from_entity(refresh_tokens::Entity);
+
+		let _result = connection
+        	.execute(connection.get_database_backend().build(&stmt))
+        	.await.unwrap();
+
+		// Create Hmac key
+		let key: Hmac<sha2::Sha256> = Hmac::new_from_slice(b"a_very_long_secret_key").unwrap();
+
+		// Create a new at and rt pair
+		let (at, rt, exp) = get_at_and_rt(&connection, &uid.to_string(), &key,).await;
+
+		// Verify the at
+		let claims: BTreeMap<String, String> = at.verify_with_key(&key).unwrap();
+		assert_eq!(claims["type"], "at");
+		assert_eq!(claims["uid"], uid);
+		assert_eq!(claims["exp"], exp.to_string());
+		assert!(claims["exp"].parse::<i64>().unwrap() - Utc::now().timestamp() > 905); // 915 is the default expiry time
+		assert!(claims["exp"].parse::<i64>().unwrap() - Utc::now().timestamp() < 925);
+		assert_eq!(claims["iss"], "TurboCore");
+
+		// Verify the rt
+		let claims: BTreeMap<String, String> = rt.verify_with_key(&key).unwrap();
+		assert_eq!(claims["type"], "rt");
+		assert_eq!(claims["uid"], uid);
+		assert!(claims["exp"].parse::<i64>().unwrap() - Utc::now().timestamp() > 2591990); // 2592000 is the default expiry time
+		assert!(claims["exp"].parse::<i64>().unwrap() - Utc::now().timestamp() < 2592010);
+		assert!(claims["rand"].len() > 0);
+		assert_eq!(claims["iss"], "TurboCore");
+
+		// Verify that the rt is in the database
+		let rt = refresh_tokens::Entity::find_by_id(rt).one(&connection).await.unwrap().unwrap();
+		assert_eq!(rt.uid, Uuid::from_str(uid).unwrap());
+
+		// Close the connection
+		connection.close().await.unwrap();
+	}
+}

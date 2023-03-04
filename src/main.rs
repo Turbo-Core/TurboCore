@@ -59,7 +59,7 @@ async fn main() -> std::io::Result<()> {
 		
 		let json_cfg = web::JsonConfig::default()
 		.error_handler(|err, _req| {
-			let err = format!("Error parsing JSON: {}", err);
+			let err = format!("Error parsing JSON: {err}");
 			log::warn!("{err}");
 			JsonError {
 				message: err,
