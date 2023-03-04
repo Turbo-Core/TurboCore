@@ -17,7 +17,6 @@ use zxcvbn::zxcvbn;
 
 use crate::AppState;
 
-// TODO: Implement error handling: https://actix.rs/docs/extractors#json
 #[derive(serde::Deserialize)]
 pub struct SignupBody {
 	email: String,

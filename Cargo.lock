@@ -20,6 +20,7 @@ dependencies = [
  "env_logger",
  "hmac",
  "lettre",
+ "log",
  "migration",
  "rust-argon2",
  "sea-orm",

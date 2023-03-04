@@ -3,17 +3,17 @@
 mod util;
 
 // Internal
-use api::{auth, AppState};
+use api::{auth::{self}, AppState};
 use uaparser::UserAgentParser;
 use util::{load_config::load_config, prune_database};
 use tokio::{spawn, time::{sleep, Duration}};
 
 // Actix
 use actix_web::{
-	http::header::SERVER,
+	http::{header::SERVER, self, StatusCode},
 	middleware::{self, Logger},
-	web::{self, Data},
-	App, HttpServer,
+	web::{self, Data, BytesMut},
+	App, HttpServer, ResponseError, HttpResponse, body::BoxBody,
 };
 
 // Sea-ORM
@@ -57,12 +57,23 @@ async fn main() -> std::io::Result<()> {
 	HttpServer::new(move || {
 		let ua_parser = UserAgentParser::from_yaml("regexes.yaml").unwrap();
 		
+		let json_cfg = web::JsonConfig::default()
+		.error_handler(|err, _req| {
+			let err = format!("Error parsing JSON: {}", err);
+			log::warn!("{err}");
+			JsonError {
+				message: err,
+				error_code: "JSON_ERROR".to_string(),
+			}.into()
+		});
+
 		App::new()
 			.app_data(Data::new(AppState {
 				connection: connection.to_owned(),
 				config: config.to_owned(),
 				ua_parser,
 			}))
+			.app_data(json_cfg)
 			.wrap(middleware::DefaultHeaders::new().add((SERVER, "TurboCore")))
 			.wrap(Logger::default())
 			.configure(add_routes)
@@ -84,4 +95,41 @@ fn add_routes(cfg: &mut web::ServiceConfig) {
 		.service(auth::magic_link::get_handler)
 		.service(auth::magic_link::post_handler)
 		.service(auth::reset_password::handler);
+}
+
+#[derive(Debug)]
+struct JsonError {
+	message: String,
+	error_code: String,
+}
+
+impl std::fmt::Display for JsonError {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.debug_struct("JsonError")
+			.field("message", &self.message)
+			.field("error_code", &self.error_code)
+			.finish()
+	}
+}
+
+impl ResponseError for JsonError {
+	fn status_code(&self) -> StatusCode {
+		StatusCode::BAD_REQUEST
+	}
+
+	fn error_response(&self) -> HttpResponse<BoxBody> {
+        let mut res = HttpResponse::new(self.status_code());
+
+		res.headers_mut().insert(
+			http::header::CONTENT_TYPE,
+			http::header::HeaderValue::from_static("application/json"),
+		);
+
+		let box_body = BoxBody::new(BytesMut::from(format!(
+			"{{\"message\": \"{}\", \"error_code\": \"{}\"}}",
+			self.message, self.error_code
+		).as_bytes()));
+
+		res.set_body(box_body)
+    }
 }
