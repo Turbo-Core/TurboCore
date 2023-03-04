@@ -363,4 +363,80 @@ mod tests {
 			_ => assert!(false),
 		}
 	}
+
+	#[test]
+	pub fn test_not_bearer() {
+		let uid = "6755d7b1-38f2-4a3a-b872-98d0e7bbd1ee";
+
+		// Create Hmac key
+		let key: Hmac<sha2::Sha256> = Hmac::new_from_slice(b"a_very_long_secret_key").unwrap();
+
+		// Create a good at
+		let mut claims: BTreeMap<&str, &str> = BTreeMap::new();
+		claims.insert("iss", "TurboCore");
+		claims.insert("type", "at");
+		claims.insert("uid", uid);
+		claims.insert("exp", "9999999999");
+		let at = claims.sign_with_key(&key).unwrap();
+
+		// Create the request and pull the headers
+		let request = actix_web::test::TestRequest::default()
+			.insert_header((header::AUTHORIZATION, at)) // Just the token with no Bearer
+			.to_http_request();
+		let header_map = request.headers();
+
+		// Test the header
+		let res = verify_header(header_map.get("authorization"), &key);
+
+		match res {
+			HeaderResult::Error(json, code) => {
+				assert_eq!(code, http::StatusCode::BAD_REQUEST);
+				let json = json.into_inner();
+				match json {
+					ApiResponse::ApiError {
+						message: _,
+						error_code,
+					} => {
+						assert_eq!(error_code, "BAD_HEADER");
+					}
+					_ => assert!(false),
+				}
+			}
+			_ => assert!(false),
+		}
+	}
+
+	#[test]
+	pub fn expired_token() {
+		let uid = "6755d7b1-38f2-4a3a-b872-98d0e7bbd1ee";
+
+		// Create Hmac key
+		let key: Hmac<sha2::Sha256> = Hmac::new_from_slice(b"a_very_long_secret_key").unwrap();
+
+		// Get the current time
+		let now = Utc::now().timestamp() - 16; // 16 seconds ago
+		let now = now.to_string();
+
+		// Create a good at
+		let mut claims: BTreeMap<&str, &str> = BTreeMap::new();
+		claims.insert("iss", "TurboCore");
+		claims.insert("type", "at");
+		claims.insert("uid", uid);
+		claims.insert("exp", &now);
+		let at = claims.sign_with_key(&key).unwrap();
+
+		// Create the request and pull the headers
+		let request = actix_web::test::TestRequest::default()
+			.insert_header((header::AUTHORIZATION, format!("Bearer {}", at)))
+			.to_http_request();
+		let header_map = request.headers();
+
+		// Test the header
+		let res = verify_header(header_map.get("authorization"), &key);
+
+		match res {
+			HeaderResult::Uid(u) => assert_eq!(u, Uuid::from_str(uid).unwrap()),
+			_ => assert!(false),
+		}
+	}
 }
