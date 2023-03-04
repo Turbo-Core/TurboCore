@@ -1,32 +1,25 @@
 #![allow(non_snake_case)] // Let's be honest, camelCase is better. But going forward, I will try to use snake_case
-
 mod util;
 
 // Internal
+use actix_web::{
+	http::header::SERVER,
+	middleware::{self, Logger},
+	web::{self, Data},
+	App, HttpServer,
+};
 use api::{
 	auth::{self},
-	AppState,
+	AppState, JsonError,
 };
+use clokwerk::{AsyncScheduler, TimeUnits};
+use migration::{Migrator, MigratorTrait};
 use tokio::{
 	spawn,
 	time::{sleep, Duration},
 };
 use uaparser::UserAgentParser;
 use util::{load_config::load_config, prune_database};
-
-// Actix
-use actix_web::{
-	body::BoxBody,
-	http::{self, header::SERVER, StatusCode},
-	middleware::{self, Logger},
-	web::{self, BytesMut, Data},
-	App, HttpResponse, HttpServer, ResponseError,
-};
-
-// Sea-ORM
-use migration::{Migrator, MigratorTrait};
-
-use clokwerk::{AsyncScheduler, TimeUnits};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -104,44 +97,4 @@ fn add_routes(cfg: &mut web::ServiceConfig) {
 		.service(auth::magic_link::get_handler)
 		.service(auth::magic_link::post_handler)
 		.service(auth::reset_password::handler);
-}
-
-#[derive(Debug)]
-struct JsonError {
-	message: String,
-	error_code: String,
-}
-
-impl std::fmt::Display for JsonError {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		f.debug_struct("JsonError")
-			.field("message", &self.message)
-			.field("error_code", &self.error_code)
-			.finish()
-	}
-}
-
-impl ResponseError for JsonError {
-	fn status_code(&self) -> StatusCode {
-		StatusCode::BAD_REQUEST
-	}
-
-	fn error_response(&self) -> HttpResponse<BoxBody> {
-		let mut res = HttpResponse::new(self.status_code());
-
-		res.headers_mut().insert(
-			http::header::CONTENT_TYPE,
-			http::header::HeaderValue::from_static("application/json"),
-		);
-
-		let box_body = BoxBody::new(BytesMut::from(
-			format!(
-				"{{\"message\": \"{}\", \"error_code\": \"{}\"}}",
-				self.message, self.error_code
-			)
-			.as_bytes(),
-		));
-
-		res.set_body(box_body)
-	}
 }

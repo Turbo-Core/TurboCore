@@ -1,5 +1,6 @@
-use lettre::AsyncSmtpTransport;
-use lettre::Tokio1Executor;
+use actix_http::{body::BoxBody, StatusCode};
+use actix_web::{http::header, HttpResponse, ResponseError, web::BytesMut};
+use lettre::{AsyncSmtpTransport, Tokio1Executor};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
@@ -65,4 +66,42 @@ pub struct AppState {
 	pub connection: sea_orm::DatabaseConnection,
 	pub config: Config,
 	pub ua_parser: uaparser::UserAgentParser,
+}
+
+#[derive(Debug)]
+pub struct JsonError {
+	pub message: String,
+	pub error_code: String,
+}
+
+impl std::fmt::Display for JsonError {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.debug_struct("JsonError")
+			.field("message", &self.message)
+			.field("error_code", &self.error_code)
+			.finish()
+	}
+}
+
+impl ResponseError for JsonError {
+	fn status_code(&self) -> StatusCode {
+		StatusCode::BAD_REQUEST
+	}
+
+	fn error_response(&self) -> HttpResponse<BoxBody> {
+		let mut res = HttpResponse::new(self.status_code());
+
+		res.headers_mut()
+			.insert(header::CONTENT_TYPE, header::HeaderValue::from_static("application/json"));
+
+		let box_body = BoxBody::new(BytesMut::from(
+			format!(
+				"{{\"message\": \"{}\", \"error_code\": \"{}\"}}",
+				self.message, self.error_code
+			)
+			.as_bytes(),
+		));
+
+		res.set_body(box_body)
+	}
 }
