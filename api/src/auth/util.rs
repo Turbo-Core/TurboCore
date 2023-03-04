@@ -168,6 +168,7 @@ mod tests {
 	use migration::TableCreateStatement;
 	use sea_orm::{Schema, DbBackend, ConnectionTrait};
 	use hmac::{Hmac, Mac};
+	use actix_web::http::header;
 
 	#[actix_web::test]
 	async fn test_get_at_and_rt() {
@@ -220,22 +221,136 @@ mod tests {
 	#[test]
 	fn test_good_header() {
 
+		let uid = "6755d7b1-38f2-4a3a-b872-98d0e7bbd1ee";
+
+		// Create Hmac key
+		let key: Hmac<sha2::Sha256> = Hmac::new_from_slice(b"a_very_long_secret_key").unwrap();
+
+		// Create a good at
+		let mut claims: BTreeMap<&str, &str> = BTreeMap::new();
+		claims.insert("iss", "TurboCore");
+		claims.insert("type", "at");
+		claims.insert("uid", uid);
+		claims.insert("exp", "9999999999");
+		let at = claims.sign_with_key(&key).unwrap();
+
+		// Create the request and pull the headers
+		let request = actix_web::test::TestRequest::default()
+			.insert_header((header::AUTHORIZATION, format!("Bearer {}", at)))
+			.to_http_request();
+  		let header_map = request.headers();
+
+		// Test the header
+		let res = verify_header(header_map.get("authorization"), &key);
+
+		match res {
+			HeaderResult::Uid(u) => assert_eq!(u, Uuid::from_str(uid).unwrap()),
+			_ => assert!(false),
+		}
 
 	}
 
 	#[test]
 	fn test_bad_header() {
+		let uid = "6755d7b1-38f2-4a3a-b872-98d0e7bbd1ee";
 
+		// Create a good Hmac key
+		let key1: Hmac<sha2::Sha256> = Hmac::new_from_slice(b"a_very_long_secret_key").unwrap();
+
+		// and a bad one
+		let key2: Hmac<sha2::Sha256> = Hmac::new_from_slice(b"incorrect_secret_key").unwrap();
+
+		// Create a good at
+		let mut claims: BTreeMap<&str, &str> = BTreeMap::new();
+		claims.insert("iss", "TurboCore");
+		claims.insert("type", "at");
+		claims.insert("uid", uid);
+		claims.insert("exp", "9999999999");
+		let at = claims.sign_with_key(&key1).unwrap();
+
+		// Create the request and pull the headers
+		let request = actix_web::test::TestRequest::default()
+			.insert_header((header::AUTHORIZATION, format!("Bearer {}", at)))
+			.to_http_request();
+  		let header_map = request.headers();
+
+		// Test the header
+		let res = verify_header(header_map.get("authorization"), &key2);
+
+		match res {
+			HeaderResult::Error(json, code) => {
+				assert_eq!(code, http::StatusCode::UNAUTHORIZED);
+				let json = json.into_inner();
+				match json {
+					ApiResponse::ApiError { message: _, error_code } => {
+						assert_eq!(error_code, "BAD_TOKEN");
+					},
+					_ => assert!(false),
+				}
+			},
+			_ => assert!(false),
+		}
 	}
 
 	#[test]
 	fn test_no_header() {
+		// Create a key
+		let key: Hmac<sha2::Sha256> = Hmac::new_from_slice(b"not_used").unwrap();
 
+		// Test no header
+		let res = verify_header(None, &key);
+		match res {
+			HeaderResult::Error(json, code) => {
+				assert_eq!(code, http::StatusCode::UNAUTHORIZED);
+				let json = json.into_inner();
+				match json {
+					ApiResponse::ApiError { message: _, error_code } => {
+						assert_eq!(error_code, "NOT_AUTHENTICATED");
+					},
+					_ => assert!(false),
+				}
+			},
+			_ => assert!(false),
+		}
 	}
 
 	#[test]
-	fn test_bad_token() {
+	fn test_bad_formatting() {
+		let uid = "6755d7b1-38f2-4a3a-b872-98d0e7bbd1ee";
 
+		// Create Hmac key
+		let key: Hmac<sha2::Sha256> = Hmac::new_from_slice(b"a_very_long_secret_key").unwrap();
+
+		// Create a good at
+		let mut claims: BTreeMap<&str, &str> = BTreeMap::new();
+		claims.insert("iss", "TurboCore");
+		claims.insert("type", "at");
+		claims.insert("uid", uid);
+		claims.insert("exp", "9999999999");
+		let at = claims.sign_with_key(&key).unwrap();
+
+		// Create the request and pull the headers
+		let request = actix_web::test::TestRequest::default()
+			.insert_header((header::AUTHORIZATION, format!("Beerer {}", at))) // Misspelled Bearer
+			.to_http_request();
+  		let header_map = request.headers();
+
+		// Test the header
+		let res = verify_header(header_map.get("authorization"), &key);
+
+		match res {
+			HeaderResult::Error(json, code) => {
+				assert_eq!(code, http::StatusCode::BAD_REQUEST);
+				let json = json.into_inner();
+				match json {
+					ApiResponse::ApiError { message: _, error_code } => {
+						assert_eq!(error_code, "BAD_HEADER");
+					},
+					_ => assert!(false),
+				}
+			},
+			_ => assert!(false),
+		}
 	}
 
 }
