@@ -169,7 +169,7 @@ mod tests {
 	use sea_orm::{Schema, DbBackend, ConnectionTrait};
 	use hmac::{Hmac, Mac};
 
-	#[actix_rt::test]
+	#[actix_web::test]
 	async fn test_get_at_and_rt() {
 
 		let uid = "6755d7b1-38f2-4a3a-b872-98d0e7bbd1ee";
@@ -216,4 +216,26 @@ mod tests {
 		// Close the connection
 		connection.close().await.unwrap();
 	}
+
+	#[test]
+	fn test_good_header() {
+
+
+	}
+
+	#[test]
+	fn test_bad_header() {
+
+	}
+
+	#[test]
+	fn test_no_header() {
+
+	}
+
+	#[test]
+	fn test_bad_token() {
+
+	}
+
 }
