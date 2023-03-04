@@ -35,6 +35,18 @@ pub struct Argon2Config {
 	pub tag_length: u32,
 }
 
+impl Default for Argon2Config {
+	fn default() -> Self {
+		Self {
+			salt_length: 16,
+			memory: 65536,
+			iterations: 4,
+			parallelism: std::thread::available_parallelism().unwrap().get() as u32 / 2,
+			tag_length: 32,
+		}
+	}
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EmailConfig {
 	pub smtp_server: String,

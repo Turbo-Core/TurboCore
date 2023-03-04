@@ -60,13 +60,7 @@ pub fn load_config() -> Config {
 		},
 		argon2_config: match json_config.argon2_params {
 			Some(c) => c,
-			None => Argon2Config {
-				salt_length: 16,
-				memory: 65536,
-				iterations: 4,
-				parallelism: std::thread::available_parallelism().unwrap().get() as u32 / 2,
-				tag_length: 32,
-			},
+			None => Argon2Config::default(),
 		},
 		minimum_password_strength: json_config.minimum_password_strength.unwrap_or(1),
 		mailer: match json_config.email {
