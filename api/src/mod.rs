@@ -18,7 +18,6 @@ pub struct Config {
 	pub base_url: String,
 	pub connection_url: String,
 	pub secret_key: hmac::Hmac<sha2::Sha256>,
-	pub bcrypt_cost: u32,
 	pub debug_level: String,
 	pub bind_addr: String,
 	pub argon2_config: Argon2Config,

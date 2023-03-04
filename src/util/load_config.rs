@@ -41,7 +41,6 @@ pub fn load_config() -> Config {
 			Some(key) => Hmac::new_from_slice(key.as_bytes()).unwrap(),
 			None => Hmac::new_from_slice(Uuid::new_v4().as_bytes()).unwrap(),
 		},
-		bcrypt_cost: json_config.bcrypt_cost.unwrap_or(12),
 		debug_level: match json_config.debug_level {
 			Some(level) => {
 				if level.eq_ignore_ascii_case("debug")
