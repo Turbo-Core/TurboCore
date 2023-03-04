@@ -92,7 +92,7 @@ pub async fn handler(data: Data<AppState>, body: Json<SignupBody>) -> impl Respo
 	let password_hash =
 		argon2::hash_encoded(body.password.as_bytes(), salt.as_slice(), &config).unwrap();
 
-	// TODO: Vulnerable until sanitize middleware is implemented
+	// FIXME: Vulnerable until sanitize middleware is implemented
 	let new_user = users::ActiveModel {
 		uid: Set(user_uid),
 		email: Set(body.email.to_owned()),

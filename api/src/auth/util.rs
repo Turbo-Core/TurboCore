@@ -24,7 +24,6 @@ pub async fn get_at_and_rt(
 	let mut token = BTreeMap::new();
 	let mut refresh_token = BTreeMap::new();
 
-	// TODO: make exp configurable
 	// The RFC protocol allows for some lee way ("up to a few minutes") in exp, hence +15 seconds
 	let short_exp = Utc::now().timestamp() + Duration::minutes(15).num_seconds() + 15;
 	let short_exp_str = short_exp.to_string();
@@ -72,7 +71,8 @@ pub fn verify_header(auth_header: Option<&HeaderValue>, secret_key: &Hmac<Sha256
 				Ok(s) => s,
 				Err(_e) => {
 					// The request contains headers with opaque bytes.
-					// TODO: Log this
+					// TODO: Log IP address of the request
+					log::warn!("Received a request that contains headers with opaque bytes. ");
 					return HeaderResult::Error(
 						Json(ApiResponse::ApiError {
 							message: "The 'Authorization' header is improperly formatted"
