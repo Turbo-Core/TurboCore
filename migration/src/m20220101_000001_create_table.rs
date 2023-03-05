@@ -47,6 +47,7 @@ impl MigrationTrait for Migration {
 		manager
 			.create_index(
 				sea_query::Index::create()
+					.if_not_exists()
 					.name("users_email")
 					.table(User::Table)
 					.col(User::Email)
@@ -57,6 +58,7 @@ impl MigrationTrait for Migration {
 		manager
 			.create_index(
 				sea_query::Index::create()
+					.if_not_exists()
 					.name("users_uid")
 					.table(User::Table)
 					.col(User::Uid)
@@ -67,6 +69,7 @@ impl MigrationTrait for Migration {
 			.create_index(
 				sea_query::Index::create()
 					.name("refresh_tokens_index")
+					.if_not_exists()
 					.table(RefreshTokenEntry::Table)
 					.col(RefreshTokenEntry::RefreshToken)
 					.to_owned(),

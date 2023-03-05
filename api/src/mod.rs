@@ -1,6 +1,3 @@
-use core::panic;
-use std::num::NonZeroUsize;
-
 use actix_http::{body::BoxBody, StatusCode};
 use actix_web::{http::header, web::BytesMut, HttpResponse, ResponseError};
 use lettre::{AsyncSmtpTransport, Tokio1Executor};
