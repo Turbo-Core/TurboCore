@@ -1,3 +1,6 @@
+use core::panic;
+use std::num::NonZeroUsize;
+
 use actix_http::{body::BoxBody, StatusCode};
 use actix_web::{http::header, web::BytesMut, HttpResponse, ResponseError};
 use lettre::{AsyncSmtpTransport, Tokio1Executor};
@@ -42,7 +45,12 @@ impl Default for Argon2Config {
 			salt_length: 16,
 			memory: 65536,
 			iterations: 4,
-			parallelism: std::thread::available_parallelism().unwrap().get() as u32 / 2,
+			parallelism: match std::thread::available_parallelism() {
+				Ok(num) => {
+					(num.get() as f64 / 2.0).ceil() as u32
+				},
+				Err(_) => 1,
+			},
 			tag_length: 32,
 		}
 	}
