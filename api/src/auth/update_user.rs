@@ -9,6 +9,7 @@ use sea_orm::{ActiveModelTrait, EntityTrait, Set};
 
 use crate::{
 	auth::{
+		api_error,
 		util::{self, HeaderResult},
 		ApiResponse,
 	},
@@ -49,10 +50,10 @@ pub async fn handler(
 			Some(user) => user,
 			None => {
 				return Either::Left((
-					Json(ApiResponse::ApiError {
-						message: "The user does not exist.".to_string(),
-						error_code: "USER_DOES_NOT_EXIST".to_string(),
-					}),
+					Json(api_error(
+						"The user was not found.".to_string(),
+						"USER_NOT_FOUND".to_string(),
+					)),
 					http::StatusCode::BAD_REQUEST,
 				));
 			}
@@ -60,10 +61,10 @@ pub async fn handler(
 		Err(e) => {
 			error!("Error finding user: {}", e);
 			return Either::Left((
-				Json(ApiResponse::ApiError {
-					message: "An error occurred while finding the user.".to_string(),
-					error_code: "USER_FIND_ERROR".to_string(),
-				}),
+				Json(api_error(
+					"An internal server error occurred.".to_string(),
+					"INTERNAL_SERVER_ERROR".to_string(),
+				)),
 				http::StatusCode::INTERNAL_SERVER_ERROR,
 			));
 		}
@@ -87,10 +88,10 @@ pub async fn handler(
 		Err(e) => {
 			error!("Error updating user: {}", e);
 			return Either::Left((
-				Json(ApiResponse::ApiError {
-					message: "An error occurred while updating the user.".to_string(),
-					error_code: "USER_UPDATE_ERROR".to_string(),
-				}),
+				Json(api_error(
+					"An internal server error occurred.".to_string(),
+					"INTERNAL_SERVER_ERROR".to_string(),
+				)),
 				http::StatusCode::INTERNAL_SERVER_ERROR,
 			));
 		}

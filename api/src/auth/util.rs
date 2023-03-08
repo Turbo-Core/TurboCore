@@ -12,7 +12,7 @@ use sha2::Sha256;
 use std::{collections::BTreeMap, str::FromStr};
 use uuid::Uuid;
 
-use super::ApiResponse;
+use super::{api_error, ApiResponse};
 
 /// Generates a JWT access token and a JWT refresh token, and expiry for the AT.
 /// Returns the value as a tuple and store the refresh token in the database
@@ -74,11 +74,10 @@ pub fn verify_header(auth_header: Option<&HeaderValue>, secret_key: &Hmac<Sha256
 					// TODO: Log IP address of the request
 					log::warn!("Received a request that contains headers with opaque bytes. ");
 					return HeaderResult::Error(
-						Json(ApiResponse::ApiError {
-							message: "The 'Authorization' header is improperly formatted"
-								.to_string(),
-							error_code: "BAD_HEADER".to_string(),
-						}),
+						Json(api_error(
+							"The 'Authorization' header is improperly formatted".to_string(),
+							"BAD_HEADER".to_string(),
+						)),
 						http::StatusCode::BAD_REQUEST,
 					);
 				}
@@ -86,10 +85,10 @@ pub fn verify_header(auth_header: Option<&HeaderValue>, secret_key: &Hmac<Sha256
 		}
 		None => {
 			return HeaderResult::Error(
-				Json(ApiResponse::ApiError {
-					message: "The request is missing an 'Authorization' header".to_string(),
-					error_code: "NOT_AUTHENTICATED".to_string(),
-				}),
+				Json(api_error(
+					"The 'Authorization' header is missing".to_string(),
+					"NOT_AUTHENTICATED".to_string(),
+				)),
 				http::StatusCode::UNAUTHORIZED,
 			);
 		}
@@ -98,10 +97,10 @@ pub fn verify_header(auth_header: Option<&HeaderValue>, secret_key: &Hmac<Sha256
 	let parts: Vec<&str> = authorization.split_whitespace().collect();
 	if parts[0] != "Bearer" && parts[0] != "bearer" {
 		return HeaderResult::Error(
-			Json(ApiResponse::ApiError {
-				message: "The 'Authorization' header is improperly formatted".to_string(),
-				error_code: "BAD_HEADER".to_string(),
-			}),
+			Json(api_error(
+				"The 'Authorization' header is improperly formatted".to_string(),
+				"BAD_HEADER".to_string(),
+			)),
 			http::StatusCode::BAD_REQUEST,
 		);
 	}
@@ -109,10 +108,10 @@ pub fn verify_header(auth_header: Option<&HeaderValue>, secret_key: &Hmac<Sha256
 		Some(token) => *token,
 		None => {
 			return HeaderResult::Error(
-				Json(ApiResponse::ApiError {
-					message: "The 'Authorization' header is improperly formatted".to_string(),
-					error_code: "BAD_HEADER".to_string(),
-				}),
+				Json(api_error(
+					"The 'Authorization' header is improperly formatted".to_string(),
+					"BAD_HEADER".to_string(),
+				)),
 				http::StatusCode::BAD_REQUEST,
 			);
 		}
@@ -122,10 +121,10 @@ pub fn verify_header(auth_header: Option<&HeaderValue>, secret_key: &Hmac<Sha256
 		Ok(c) => c,
 		Err(_) => {
 			return HeaderResult::Error(
-				Json(ApiResponse::ApiError {
-					message: "The JWT could not be verified by the server".to_string(),
-					error_code: "BAD_TOKEN".to_string(),
-				}),
+				Json(api_error(
+					"The provided token could not be verified by the server.".to_string(),
+					"BAD_TOKEN".to_string(),
+				)),
 				http::StatusCode::UNAUTHORIZED,
 			);
 		}
@@ -133,20 +132,20 @@ pub fn verify_header(auth_header: Option<&HeaderValue>, secret_key: &Hmac<Sha256
 
 	if Utc::now().timestamp() > claims.get("exp").unwrap().parse().unwrap() {
 		return HeaderResult::Error(
-			Json(ApiResponse::ApiError {
-				message: "The JWT has already expired".to_string(),
-				error_code: "BAD_TOKEN".to_string(),
-			}),
+			Json(api_error(
+				"The provided token has already expired".to_string(),
+				"EXPIRED_TOKEN".to_string(),
+			)),
 			http::StatusCode::UNAUTHORIZED,
 		);
 	}
 
 	if claims.get("type").unwrap() != "at" {
 		return HeaderResult::Error(
-			Json(ApiResponse::ApiError {
-				message: "The JWT is not an access token".to_string(),
-				error_code: "BAD_TOKEN".to_string(),
-			}),
+			Json(api_error(
+				"The provided JWT is not an access token.".to_string(),
+				"BAD_TOKEN".to_string(),
+			)),
 			http::StatusCode::UNAUTHORIZED,
 		);
 	}
@@ -443,7 +442,7 @@ mod tests {
 						message: _,
 						error_code,
 					} => {
-						assert_eq!(error_code, "BAD_TOKEN");
+						assert_eq!(error_code, "EXPIRED_TOKEN");
 					}
 					_ => assert!(false),
 				}

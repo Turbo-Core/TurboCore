@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use crate::{
-	auth::{util::get_at_and_rt, ApiResponse},
+	auth::{api_error, util::get_at_and_rt, ApiResponse},
 	AppState,
 };
 use actix_web::{
@@ -34,10 +34,10 @@ pub async fn post_handler(
 ) -> Either<(Json<ApiResponse>, http::StatusCode), HttpResponse> {
 	if data.config.mailer.is_none() || data.config.email.is_none() {
 		return Either::Left((
-			Json(ApiResponse::ApiError {
-				message: "The server is not configured to send emails.".to_string(),
-				error_code: "EMAIL_NOT_CONFIGURED".to_string(),
-			}),
+			Json(api_error(
+				"The server is not configured to send emails.".to_string(),
+				"EMAIL_NOT_CONFIGURED".to_string(),
+			)),
 			http::StatusCode::BAD_REQUEST,
 		));
 	}
@@ -51,10 +51,10 @@ pub async fn post_handler(
 			Some(user) => {
 				if body.sign_up {
 					return Either::Left((
-						Json(ApiResponse::ApiError {
-							message: "The user already exists.".to_string(),
-							error_code: "USER_ALREADY_EXISTS".to_string(),
-						}),
+						Json(api_error(
+							"The user already exists.".to_string(),
+							"USER_ALREADY_EXISTS".to_string(),
+						)),
 						http::StatusCode::BAD_REQUEST,
 					));
 				}
@@ -63,10 +63,10 @@ pub async fn post_handler(
 			None => {
 				if !body.sign_up {
 					return Either::Left((
-						Json(ApiResponse::ApiError {
-							message: "The user does not exist.".to_string(),
-							error_code: "USER_DOES_NOT_EXIST".to_string(),
-						}),
+						Json(api_error(
+							"The user does not exist.".to_string(),
+							"USER_DOES_NOT_EXIST".to_string(),
+						)),
 						http::StatusCode::BAD_REQUEST,
 					));
 				}
@@ -88,10 +88,10 @@ pub async fn post_handler(
 					Err(e) => {
 						error!("Unable to create user. Error: {}", e.to_string());
 						return Either::Left((
-							Json(ApiResponse::ApiError {
-								message: "Internal Server Error".to_string(),
-								error_code: "INTERNAL_SERVER_ERROR".to_string(),
-							}),
+							Json(api_error(
+								"Internal Server Error".to_string(),
+								"INTERNAL_SERVER_ERROR".to_string(),
+							)),
 							http::StatusCode::INTERNAL_SERVER_ERROR,
 						));
 					}
@@ -101,10 +101,10 @@ pub async fn post_handler(
 		Err(e) => {
 			error!("Unable to find user. Error: {}", e.to_string());
 			return Either::Left((
-				Json(ApiResponse::ApiError {
-					message: "Internal Server Error".to_string(),
-					error_code: "INTERNAL_SERVER_ERROR".to_string(),
-				}),
+				Json(api_error(
+					"Internal Server Error".to_string(),
+					"INTERNAL_SERVER_ERROR".to_string(),
+				)),
 				http::StatusCode::INTERNAL_SERVER_ERROR,
 			));
 		}
@@ -163,25 +163,25 @@ pub async fn get_handler(data: Data<AppState>, path: Path<String>) -> HttpRespon
 		Ok(claims) => claims,
 		Err(e) => {
 			error!("Unable to verify token. Error: {}", e.to_string());
-			return HttpResponse::BadRequest().json(ApiResponse::ApiError {
-				message: "The token is invalid.".to_string(),
-				error_code: "INVALID_TOKEN".to_string(),
-			});
+			return HttpResponse::BadRequest().json(api_error(
+				"The provided was invalid.".to_string(),
+				"INVALID_TOKEN".to_string(),
+			));
 		}
 	};
 
 	if Utc::now().timestamp() > claims["exp"].parse::<i64>().unwrap() {
-		return HttpResponse::BadRequest().json(ApiResponse::ApiError {
-			message: "The token has expired.".to_string(),
-			error_code: "TOKEN_EXPIRED".to_string(),
-		});
+		return HttpResponse::BadRequest().json(api_error(
+			"The token has already expired".to_string(),
+			"EXPIRED_TOKEN".to_string(),
+		));
 	}
 
 	if claims["type"] != "magic-link" {
-		return HttpResponse::BadRequest().json(ApiResponse::ApiError {
-			message: "The token is invalid.".to_string(),
-			error_code: "INVALID_TOKEN".to_string(),
-		});
+		return HttpResponse::BadRequest().json(api_error(
+			"The provided token is invalid.".to_string(),
+			"INVALID_TOKEN".to_string(),
+		));
 	}
 
 	let uid = Uuid::parse_str(&claims["uid"]).unwrap();
@@ -194,18 +194,18 @@ pub async fn get_handler(data: Data<AppState>, path: Path<String>) -> HttpRespon
 		Ok(user) => match user {
 			Some(user) => user,
 			None => {
-				return HttpResponse::BadRequest().json(ApiResponse::ApiError {
-					message: "The user does not exist.".to_string(),
-					error_code: "USER_DOES_NOT_EXIST".to_string(),
-				})
+				return HttpResponse::BadRequest().json(api_error(
+					"The user does not exist.".to_string(),
+					"USER_DOES_NOT_EXIST".to_string(),
+				));
 			}
 		},
 		Err(e) => {
 			error!("Unable to find user. Error: {}", e.to_string());
-			return HttpResponse::InternalServerError().json(ApiResponse::ApiError {
-				message: "Internal Server Error".to_string(),
-				error_code: "INTERNAL_SERVER_ERROR".to_string(),
-			});
+			return HttpResponse::InternalServerError().json(api_error(
+				"Internal Server Error".to_string(),
+				"INTERNAL_SERVER_ERROR".to_string(),
+			));
 		}
 	};
 

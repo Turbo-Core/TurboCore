@@ -2,7 +2,7 @@ extern crate zxcvbn;
 
 use std::collections::BTreeMap;
 
-use crate::auth::util;
+use crate::auth::{api_error, util};
 use crate::{auth::ApiResponse, AppState};
 use actix_web::{
 	http, patch,
@@ -49,10 +49,10 @@ pub async fn handler(
 		Ok(ent) => ent,
 		Err(_) => {
 			return Either::Left((
-				Json(ApiResponse::ApiError {
-					message: "An empty password was provided.".to_string(),
-					error_code: "INVALID_PASSWORD".to_string(),
-				}),
+				Json(api_error(
+					"An empty password was provided.".to_string(),
+					"INVALID_PASSWORD".to_string(),
+				)),
 				http::StatusCode::BAD_REQUEST,
 			));
 		}
@@ -67,10 +67,7 @@ pub async fn handler(
 			None => "The password provided is too weak.".to_string(),
 		};
 		return Either::Left((
-			Json(ApiResponse::ApiError {
-				message: feedback_msg,
-				error_code: "INVALID_PASSWORD".to_string(),
-			}),
+			Json(api_error(feedback_msg, "INVALID_PASSWORD".to_string())),
 			http::StatusCode::BAD_REQUEST,
 		));
 	}
@@ -89,20 +86,20 @@ pub async fn handler(
 		// Check if the token is expired
 		if Utc::now().timestamp() > claims["exp"].parse().unwrap() {
 			return Either::Left((
-				Json(ApiResponse::ApiError {
-					message: "The password reset token has already expired.".to_string(),
-					error_code: "INVALID_TOKEN".to_string(),
-				}),
+				Json(api_error(
+					"The password reset token has already expired".to_string(),
+					"INVALID_TOKEN".to_string(),
+				)),
 				http::StatusCode::BAD_REQUEST,
 			));
 		}
 
 		if claims["type"] != "password_reset" {
 			return Either::Left((
-				Json(ApiResponse::ApiError {
-					message: "The password reset token provided is invalid.".to_string(),
-					error_code: "INVALID_TOKEN".to_string(),
-				}),
+				Json(api_error(
+					"The provided token is invalid.".to_string(),
+					"INVALID_TOKEN".to_string(),
+				)),
 				http::StatusCode::BAD_REQUEST,
 			));
 		}
@@ -117,10 +114,10 @@ pub async fn handler(
 			Some(user_model) => user_model,
 			None => {
 				return Either::Left((
-					Json(ApiResponse::ApiError {
-						message: "The user was not found.".to_string(),
-						error_code: "USER_NOT_FOUND".to_string(),
-					}),
+					Json(api_error(
+						"The user does not exist.".to_string(),
+						"USER_NOT_FOUND".to_string(),
+					)),
 					http::StatusCode::NOT_FOUND,
 				));
 			}
@@ -128,10 +125,10 @@ pub async fn handler(
 		Err(e) => {
 			error!("An error occurred when finding user. Error: {}", e.to_string());
 			return Either::Left((
-				Json(ApiResponse::ApiError {
-					message: "Internal server error.".to_string(),
-					error_code: "INTERNAL_SERVER_ERROR".to_string(),
-				}),
+				Json(api_error(
+					"An error occurred when finding user.".to_string(),
+					"INTERNAL_SERVER_ERROR".to_string(),
+				)),
 				http::StatusCode::INTERNAL_SERVER_ERROR,
 			));
 		}
@@ -142,10 +139,10 @@ pub async fn handler(
 		&& !argon2::verify_encoded(&user.password, body.old_password.as_bytes()).unwrap()
 	{
 		return Either::Left((
-			Json(ApiResponse::ApiError {
-				message: "The email or password is invalid".to_string(),
-				error_code: "INVALID_CREDENTIALS".to_string(),
-			}),
+			Json(api_error(
+				"The provided email and password do not match.".to_string(),
+				"INVALID_CREDENTIALS".to_string(),
+			)),
 			http::StatusCode::UNAUTHORIZED,
 		));
 	}
@@ -177,10 +174,10 @@ pub async fn handler(
 		Err(e) => {
 			error!("Failed to change user password. Error: {}", e.to_string());
 			return Either::Left((
-				Json(ApiResponse::ApiError {
-					message: "Failed to change the password.".to_string(),
-					error_code: "INTERNAL_SERVER_ERROR".to_string(),
-				}),
+				Json(api_error(
+					"Failed to change user password.".to_string(),
+					"INTERNAL_SERVER_ERROR".to_string(),
+				)),
 				http::StatusCode::INTERNAL_SERVER_ERROR,
 			));
 		}

@@ -1,5 +1,8 @@
 use crate::{
-	auth::util::{self, HeaderResult},
+	auth::{
+		api_error,
+		util::{self, HeaderResult},
+	},
 	AppState,
 };
 use actix_web::{
@@ -45,10 +48,10 @@ pub async fn handler(
 				Err(e) => {
 					error!("Failed to delete refresh token {}. Error: {}", token, e.to_string());
 					Either::Left((
-						Json(ApiResponse::ApiError {
-							message: "Internal Server Error".to_string(),
-							error_code: "INTERNAL_SERVER_ERROR".to_string(),
-						}),
+						Json(api_error(
+							"Internal Server Error".to_string(),
+							"INTERNAL_SERVER_ERROR".to_string(),
+						)),
 						http::StatusCode::INTERNAL_SERVER_ERROR,
 					))
 				}
@@ -68,10 +71,10 @@ pub async fn handler(
 						e.to_string()
 					);
 					Either::Left((
-						Json(ApiResponse::ApiError {
-							message: "Internal Server Error".to_string(),
-							error_code: "INTERNAL_SERVER_ERROR".to_string(),
-						}),
+						Json(api_error(
+							"Internal Server Error".to_string(),
+							"INTERNAL_SERVER_ERROR".to_string(),
+						)),
 						http::StatusCode::INTERNAL_SERVER_ERROR,
 					))
 				}

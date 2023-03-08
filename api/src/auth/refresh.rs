@@ -1,7 +1,7 @@
 use std::{collections::BTreeMap, str::FromStr};
 
 use crate::{
-	auth::{util::get_at_and_rt, ApiResponse},
+	auth::{api_error, util::get_at_and_rt, ApiResponse},
 	AppState,
 };
 use actix_web::{
@@ -30,10 +30,10 @@ pub async fn handler(data: Data<AppState>, body: Json<RefreshBody>) -> impl Resp
 			Ok(c) => c,
 			Err(_) => {
 				return (
-					Json(ApiResponse::ApiError {
-						message: "The provided JWT could not be verified by the server".to_string(),
-						error_code: "INVALID_JWT".to_string(),
-					}),
+					Json(api_error(
+						"The JWT provided is invalid".to_string(),
+						"INVALID_JWT".to_string(),
+					)),
 					http::StatusCode::UNAUTHORIZED,
 				);
 			}
@@ -42,10 +42,10 @@ pub async fn handler(data: Data<AppState>, body: Json<RefreshBody>) -> impl Resp
 	// Check if RT is expired
 	if Utc::now().timestamp() > claims["get"].parse().unwrap() {
 		return (
-			Json(ApiResponse::ApiError {
-				message: "The JWT provided has already expired. Please log in again".to_string(),
-				error_code: "EXPIRED_JWT".to_string(),
-			}),
+			Json(api_error(
+				"The provided token has already expired".to_string(),
+				"EXPIRED_JWT".to_string(),
+			)),
 			http::StatusCode::UNAUTHORIZED,
 		);
 	}
@@ -53,10 +53,7 @@ pub async fn handler(data: Data<AppState>, body: Json<RefreshBody>) -> impl Resp
 	// Check if th token is indeed an RT
 	if claims["type"] != "rt" {
 		return (
-			Json(ApiResponse::ApiError {
-				message: "The provided refresh token is invalid".to_string(),
-				error_code: "INVALID_JWT".to_string(),
-			}),
+			Json(api_error("The JWT provided is invalid".to_string(), "INVALID_JWT".to_string())),
 			http::StatusCode::UNAUTHORIZED,
 		);
 	}
@@ -83,10 +80,10 @@ pub async fn handler(data: Data<AppState>, body: Json<RefreshBody>) -> impl Resp
 			_ => {
 				error!("Database error: {}", err.to_string());
 				return (
-					Json(ApiResponse::ApiError {
-						message: "Internal Server Error".to_string(),
-						error_code: "INTERNAL_SERVER_ERROR".to_string(),
-					}),
+					Json(api_error(
+						"An internal server error occurred".to_string(),
+						"INTERNAL_SERVER_ERROR".to_string(),
+					)),
 					http::StatusCode::INTERNAL_SERVER_ERROR,
 				);
 			}
@@ -98,12 +95,10 @@ pub async fn handler(data: Data<AppState>, body: Json<RefreshBody>) -> impl Resp
 						// Again, revoke all RTs, reuse of RT is not allowed
 						delete_old_rt(&uid, &data.connection).await;
 						return (
-							Json(ApiResponse::ApiError {
-								message:
-									"The JWT provided has already expired. Please log in again"
-										.to_string(),
-								error_code: "EXPIRED_JWT".to_string(),
-							}),
+							Json(api_error(
+								"The provided token has already expired.".to_string(),
+								"EXPIRED_JWT".to_string(),
+							)),
 							http::StatusCode::UNAUTHORIZED,
 						);
 					}
@@ -138,10 +133,10 @@ pub async fn handler(data: Data<AppState>, body: Json<RefreshBody>) -> impl Resp
 		}
 	}
 	(
-		Json(ApiResponse::ApiError {
-			message: "The JWT provided has already expired. Please log in again".to_string(),
-			error_code: "EXPIRED_JWT".to_string(),
-		}),
+		Json(api_error(
+			"The provided token has already expired.".to_string(),
+			"EXPIRED_JWT".to_string(),
+		)),
 		http::StatusCode::UNAUTHORIZED,
 	)
 }

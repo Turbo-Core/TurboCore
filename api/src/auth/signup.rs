@@ -1,6 +1,6 @@
 extern crate zxcvbn;
 
-use crate::auth::{util, ApiResponse};
+use crate::auth::{api_error, util, ApiResponse};
 use actix_web::{
 	http, post,
 	web::{Data, Json},
@@ -31,10 +31,10 @@ pub async fn handler(data: Data<AppState>, body: Json<SignupBody>) -> impl Respo
 	// Check email validity
 	if !crate::EMAIL_REGEX.is_match(&body.email) {
 		return (
-			Json(ApiResponse::ApiError {
-				message: "The provided email is invalid.".to_string(),
-				error_code: "INVALID_EMAIL".to_string(),
-			}),
+			Json(api_error(
+				"The email provided is already in use.".to_string(),
+				"EMAIL_IN_USE".to_string(),
+			)),
 			http::StatusCode::BAD_REQUEST,
 		);
 	}
@@ -44,10 +44,10 @@ pub async fn handler(data: Data<AppState>, body: Json<SignupBody>) -> impl Respo
 		Ok(ent) => ent,
 		Err(_) => {
 			return (
-				Json(ApiResponse::ApiError {
-					message: "An empty password was provided.".to_string(),
-					error_code: "INVALID_PASSWORD".to_string(),
-				}),
+				Json(api_error(
+					"An invalid password was provided.".to_string(),
+					"INVALID_PASSWORD".to_string(),
+				)),
 				http::StatusCode::BAD_REQUEST,
 			);
 		}
@@ -62,10 +62,7 @@ pub async fn handler(data: Data<AppState>, body: Json<SignupBody>) -> impl Respo
 			None => "The password provided is too weak.".to_string(),
 		};
 		return (
-			Json(ApiResponse::ApiError {
-				message: feedback_msg,
-				error_code: "INVALID_PASSWORD".to_string(),
-			}),
+			Json(api_error(feedback_msg, "WEAK_PASSWORD".to_string())),
 			http::StatusCode::BAD_REQUEST,
 		);
 	}
@@ -144,17 +141,17 @@ pub async fn handler(data: Data<AppState>, body: Json<SignupBody>) -> impl Respo
 			}
 		}
 		Err(DbErr::RecordNotInserted) => (
-			Json(ApiResponse::ApiError {
-				message: "This email is already in use.".to_string(),
-				error_code: "EMAIL_ALREADY_IN_USE".to_string(),
-			}),
+			Json(api_error(
+				"The email provided is already in use.".to_string(),
+				"EMAIL_IN_USE".to_string(),
+			)),
 			http::StatusCode::CONFLICT,
 		),
 		_ => (
-			Json(ApiResponse::ApiError {
-				message: "Internal Server Error".to_string(),
-				error_code: "INTERNAL_ERROR".to_string(),
-			}),
+			Json(api_error(
+				"Internal Server Error.".to_string(),
+				"INTERNAL_SERVER_ERROR".to_string(),
+			)),
 			http::StatusCode::INTERNAL_SERVER_ERROR,
 		),
 	}

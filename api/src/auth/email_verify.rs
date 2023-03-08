@@ -2,6 +2,7 @@ use std::collections::BTreeMap;
 
 use crate::{
 	auth::{
+		api_error,
 		util::{self, HeaderResult},
 		ApiResponse,
 	},
@@ -49,10 +50,10 @@ pub async fn send_handler(
 			Some(user) => user,
 			None => {
 				return Either::Left((
-					Json(ApiResponse::ApiError {
-						message: "The user was not found".to_string(),
-						error_code: "USER_NOT_FOUND".to_string(),
-					}),
+					Json(api_error(
+						"The user was not found.".to_string(),
+						"USER_NOT_FOUND".to_string(),
+					)),
 					http::StatusCode::NOT_FOUND,
 				));
 			}
@@ -60,10 +61,10 @@ pub async fn send_handler(
 		Err(e) => {
 			error!("Unable to find user. Error: {}", e.to_string());
 			return Either::Left((
-				Json(ApiResponse::ApiError {
-					message: "Internal Server Error".to_string(),
-					error_code: "INTERNAL_SERVER_ERROR".to_string(),
-				}),
+				Json(api_error(
+					"An internal server error occurred.".to_string(),
+					"INTERNAL_SERVER_ERROR".to_string(),
+				)),
 				http::StatusCode::INTERNAL_SERVER_ERROR,
 			));
 		}
@@ -71,20 +72,20 @@ pub async fn send_handler(
 
 	if user.email_verified {
 		return Either::Left((
-			Json(ApiResponse::ApiError {
-				message: "The user is already verified.".to_string(),
-				error_code: "ALREADY_VERIFIED".to_string(),
-			}),
+			Json(api_error(
+				"The user's email is already verified.".to_string(),
+				"EMAIL_ALREADY_VERIFIED".to_string(),
+			)),
 			http::StatusCode::BAD_REQUEST,
 		));
 	}
 
 	if data.config.mailer.is_none() || data.config.email.is_none() {
 		return Either::Left((
-			Json(ApiResponse::ApiError {
-				message: "The server is not configured to send emails.".to_string(),
-				error_code: "EMAIL_NOT_CONFIGURED".to_string(),
-			}),
+			Json(api_error(
+				"The server is not configured to send emails.".to_string(),
+				"EMAIL_NOT_CONFIGURED".to_string(),
+			)),
 			http::StatusCode::BAD_REQUEST,
 		));
 	}

@@ -8,10 +8,7 @@ use actix_web::{
 	web::{self, Data},
 	App, HttpServer,
 };
-use api::{
-	auth::{self},
-	AppState, JsonError,
-};
+use api::{AppState, JsonError};
 use clokwerk::{AsyncScheduler, TimeUnits};
 use migration::{Migrator, MigratorTrait};
 use tokio::{
@@ -78,23 +75,9 @@ async fn main() -> std::io::Result<()> {
 			.app_data(json_cfg)
 			.wrap(middleware::DefaultHeaders::new().add((SERVER, "TurboCore")))
 			.wrap(Logger::default())
-			.configure(add_routes)
+			.configure(api::auth::add_routes)
 	})
 	.bind(bind_addr)?
 	.run()
 	.await
-}
-
-fn add_routes(cfg: &mut web::ServiceConfig) {
-	cfg.service(auth::signup::handler)
-		.service(auth::login::handler)
-		.service(auth::refresh::handler)
-		.service(auth::get_user::handler)
-		.service(auth::delete_user::handler)
-		.service(auth::change_password::handler)
-		.service(auth::email_verify::send_handler)
-		.service(auth::email_verify::receive_handler)
-		.service(auth::magic_link::get_handler)
-		.service(auth::magic_link::post_handler)
-		.service(auth::reset_password::handler);
 }

@@ -43,9 +43,7 @@ impl Default for Argon2Config {
 			memory: 65536,
 			iterations: 4,
 			parallelism: match std::thread::available_parallelism() {
-				Ok(num) => {
-					(num.get() as f64 / 2.0).ceil() as u32
-				},
+				Ok(num) => (num.get() as f64 / 2.0).ceil() as u32,
 				Err(_) => 1,
 			},
 			tag_length: 32,

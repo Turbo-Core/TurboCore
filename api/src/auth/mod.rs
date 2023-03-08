@@ -1,3 +1,4 @@
+use actix_web::web;
 use sea_orm::entity::prelude::DateTime;
 use serde::Serialize;
 
@@ -48,4 +49,25 @@ pub enum ApiResponse {
 		metadata: Option<String>,
 		email_verified: bool,
 	},
+}
+
+pub fn api_error(message: String, error_code: String) -> ApiResponse {
+	ApiResponse::ApiError {
+		message,
+		error_code,
+	}
+}
+
+pub fn add_routes(cfg: &mut web::ServiceConfig) {
+	cfg.service(crate::auth::signup::handler)
+		.service(crate::auth::login::handler)
+		.service(crate::auth::refresh::handler)
+		.service(crate::auth::get_user::handler)
+		.service(crate::auth::delete_user::handler)
+		.service(crate::auth::change_password::handler)
+		.service(crate::auth::email_verify::send_handler)
+		.service(crate::auth::email_verify::receive_handler)
+		.service(crate::auth::magic_link::get_handler)
+		.service(crate::auth::magic_link::post_handler)
+		.service(crate::auth::reset_password::handler);
 }

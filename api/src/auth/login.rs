@@ -1,5 +1,5 @@
 use crate::{
-	auth::{util::get_at_and_rt, ApiResponse},
+	auth::{api_error, util::get_at_and_rt, ApiResponse},
 	AppState,
 };
 use actix_web::{
@@ -33,20 +33,19 @@ pub async fn handler(data: Data<AppState>, body: Json<LoginBody>) -> impl Respon
 				Some(user) => {
 					if !user.active {
 						return (
-							Json(ApiResponse::ApiError {
-								message: "The user has been disabled by an administrator."
-									.to_string(),
-								error_code: "USER_DISABLED".to_string(),
-							}),
+							Json(api_error(
+								"The user has been disabled by an administrator.".to_string(),
+								"USER_DISABLED".to_string(),
+							)),
 							http::StatusCode::UNAUTHORIZED,
 						);
 					}
 					if !argon2::verify_encoded(&user.password, body.password.as_bytes()).unwrap() {
 						return (
-							Json(ApiResponse::ApiError {
-								message: "The email or password is invalid".to_string(),
-								error_code: "INVALID_CREDENTIALS".to_string(),
-							}),
+							Json(api_error(
+								"The email or password is invalid".to_string(),
+								"INVALID_CREDENTIALS".to_string(),
+							)),
 							http::StatusCode::UNAUTHORIZED,
 						);
 					}
@@ -67,10 +66,10 @@ pub async fn handler(data: Data<AppState>, body: Json<LoginBody>) -> impl Respon
 				}
 				// User is not found
 				None => (
-					Json(ApiResponse::ApiError {
-						message: "The email or password is invalid".to_string(),
-						error_code: "INVALID_CREDENTIALS".to_string(),
-					}),
+					Json(api_error(
+						"The email or password is invalid".to_string(),
+						"INVALID_CREDENTIALS".to_string(),
+					)),
 					http::StatusCode::UNAUTHORIZED,
 				),
 			}
@@ -78,10 +77,10 @@ pub async fn handler(data: Data<AppState>, body: Json<LoginBody>) -> impl Respon
 		Err(e) => {
 			error!("An error occurred when finding user. Error: {}", e.to_string());
 			(
-				Json(ApiResponse::ApiError {
-					message: "Internal server error.".to_string(),
-					error_code: "INTERNAL_SERVER_ERROR".to_string(),
-				}),
+				Json(api_error(
+					"An internal server error occurred.".to_string(),
+					"INTERNAL_SERVER_ERROR".to_string(),
+				)),
 				http::StatusCode::INTERNAL_SERVER_ERROR,
 			)
 		}

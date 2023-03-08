@@ -1,4 +1,4 @@
-use crate::auth::util;
+use crate::auth::{api_error, util};
 use crate::{auth::ApiResponse, AppState};
 use actix_web::{
 	get, http,
@@ -41,20 +41,20 @@ pub async fn handler(request: actix_web::HttpRequest, data: Data<AppState>) -> i
 				http::StatusCode::OK,
 			),
 			None => (
-				Json(ApiResponse::ApiError {
-					message: "The requested user was not found".to_string(),
-					error_code: "USER_NOT_FOUND".to_string(),
-				}),
+				Json(api_error(
+					"The user was not found.".to_string(),
+					"USER_NOT_FOUND".to_string(),
+				)),
 				http::StatusCode::NOT_FOUND,
 			),
 		},
 		Err(err) => {
 			info!("{}", err.to_string());
 			(
-				Json(ApiResponse::ApiError {
-					message: "Something went wrong".to_string(),
-					error_code: "INTERNAL_SERVER_ERROR".to_string(),
-				}),
+				Json(api_error(
+					"An internal server error occurred.".to_string(),
+					"INTERNAL_SERVER_ERROR".to_string(),
+				)),
 				http::StatusCode::INTERNAL_SERVER_ERROR,
 			)
 		}

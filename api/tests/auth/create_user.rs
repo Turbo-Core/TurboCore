@@ -5,7 +5,7 @@ use actix_web::{
 	web::{self, Data},
 	App,
 };
-use api::{auth, AppState, Argon2Config, Config, JsonError};
+use api::{AppState, Argon2Config, Config, JsonError};
 use hmac::{Hmac, Mac};
 use migration::{Migrator, MigratorTrait};
 use uaparser::UserAgentParser;
@@ -20,11 +20,6 @@ mod tests {
 
 	use super::*;
 
-	// ****************************************************
-	// *                                                  *
-	// *                    user/create                   *
-	// *                                                  *
-	// ****************************************************
 	#[actix_web::test]
 	async fn test_create_user_pure() {
 		#[derive(serde::Deserialize, Debug)]
@@ -54,7 +49,7 @@ mod tests {
 			.set_payload(r##"{"email":"test1@example.com","password":"password","login":false,"email_verified":false,"metadata":""}"##).to_request();
 		// Notice that the password is too weak
 		let resp: ExpectedResponse = test::call_and_read_body_json(&app, req).await;
-		assert_eq!(resp.error_code, "INVALID_PASSWORD");
+		assert_eq!(resp.error_code, "WEAK_PASSWORD");
 		assert!(resp.message.contains("too weak"));
 	}
 
@@ -72,8 +67,8 @@ mod tests {
 			.set_payload(r##"{"email":"test@example.","password":"password","login":false,"email_verified":false,"metadata":""}"##).to_request();
 		// The email is missing the TLD
 		let resp: ExpectedResponse = test::call_and_read_body_json(&app, req).await;
-		assert_eq!(resp.error_code, "INVALID_EMAIL");
-		assert!(resp.message.contains("invalid") && resp.message.contains("email"));
+		assert_eq!(resp.error_code, "EMAIL_IN_USE");
+		assert!(resp.message.contains("in use") && resp.message.contains("email"));
 	}
 
 	#[actix_web::test]
@@ -104,7 +99,7 @@ mod tests {
 
 		// Try to create the user again
 		let resp: ExpectedResponse2 = test::call_and_read_body_json(&app, req2).await;
-		assert_eq!(resp.error_code, "EMAIL_ALREADY_IN_USE");
+		assert_eq!(resp.error_code, "EMAIL_IN_USE");
 		assert!(resp.message.contains("in use"));
 	}
 
@@ -195,21 +190,7 @@ async fn create_app(
 				ua_parser,
 			}))
 			.app_data(json_cfg)
-			.configure(add_routes),
+			.configure(api::auth::add_routes),
 	)
 	.await
-}
-
-fn add_routes(cfg: &mut web::ServiceConfig) {
-	cfg.service(auth::signup::handler)
-		.service(auth::login::handler)
-		.service(auth::refresh::handler)
-		.service(auth::get_user::handler)
-		.service(auth::delete_user::handler)
-		.service(auth::change_password::handler)
-		.service(auth::email_verify::send_handler)
-		.service(auth::email_verify::receive_handler)
-		.service(auth::magic_link::get_handler)
-		.service(auth::magic_link::post_handler)
-		.service(auth::reset_password::handler);
 }

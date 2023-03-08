@@ -14,7 +14,10 @@ use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use serde::Deserialize;
 use uaparser::Parser;
 
-use crate::{auth::ApiResponse, AppState};
+use crate::{
+	auth::{api_error, ApiResponse},
+	AppState,
+};
 
 #[derive(Deserialize)]
 pub struct ResetPasswordRequest {
@@ -33,10 +36,10 @@ pub async fn handler(
 	// Check if the server is configured to send emails
 	if data.config.mailer.is_none() || data.config.email.is_none() {
 		return Either::Left((
-			Json(ApiResponse::ApiError {
-				message: "The server is not configured to send emails.".to_string(),
-				error_code: "EMAIL_NOT_CONFIGURED".to_string(),
-			}),
+			Json(api_error(
+				"The server is not configured to send emails.".to_string(),
+				"EMAIL_NOT_CONFIGURED".to_string(),
+			)),
 			http::StatusCode::BAD_REQUEST,
 		));
 	}
@@ -60,10 +63,10 @@ pub async fn handler(
 		Err(e) => {
 			error!("Unable to find user. Database Error: {}", e.to_string());
 			return Either::Left((
-				Json(ApiResponse::ApiError {
-					message: "Internal Server Error".to_string(),
-					error_code: "INTERNAL_SERVER_ERROR".to_string(),
-				}),
+				Json(api_error(
+					"Internal Server Error.".to_string(),
+					"INTERNAL_SERVER_ERROR".to_string(),
+				)),
 				http::StatusCode::INTERNAL_SERVER_ERROR,
 			));
 		}
