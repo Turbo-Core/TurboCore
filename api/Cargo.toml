@@ -21,8 +21,6 @@ jwt = "0.16.0"
 lazy_static = "1.4.0"
 regex = "1.7.1"
 zxcvbn = "2.2.1"
-actix-http = "3.3.1" # for testing
-actix-service = "2.0.2" # for testing
 # Sea-ORM
 entity = { path = "../entity" }
 migration = { path = "../migration" }
@@ -42,3 +40,7 @@ rand = "0.8.5"
 log = "0.4.17"
 chrono = {version = "0.4.23", default-features = false, features = ["serde"]}
 uaparser = "0.6.0"
+
+[dev-dependencies]
+actix-http = "3.3.1"
+actix-service = "2.0.2"
