@@ -4,7 +4,6 @@ use uuid::Uuid;
 use crate::auth::create_app;
 
 mod tests {
-
 	use std::{collections::BTreeMap, str::FromStr};
 
 	use actix_web::http::header::ContentType;
@@ -19,7 +18,7 @@ mod tests {
 			uid: String,
 		}
 
-		let app = create_app().await;
+		let app = create_app(None, None).await;
 		let req = test::TestRequest::post().uri("/api/auth/user/create")
 			.insert_header(ContentType::json())
 			.set_payload(r##"{"email":"test@example.com","password":"a_strong_password1111011","login":false,"email_verified":false,"metadata":""}"##).to_request();
@@ -35,7 +34,7 @@ mod tests {
 			error_code: String,
 		}
 
-		let app = create_app().await;
+		let app = create_app(None, None).await;
 		let req = test::TestRequest::post().uri("/api/auth/user/create")
 			.insert_header(ContentType::json())
 			.set_payload(r##"{"email":"test1@example.com","password":"password","login":false,"email_verified":false,"metadata":""}"##).to_request();
@@ -53,7 +52,7 @@ mod tests {
 			error_code: String,
 		}
 
-		let app = create_app().await;
+		let app = create_app(None, None).await;
 		let req = test::TestRequest::post().uri("/api/auth/user/create")
 			.insert_header(ContentType::json())
 			.set_payload(r##"{"email":"test@example.","password":"password","login":false,"email_verified":false,"metadata":""}"##).to_request();
@@ -76,7 +75,7 @@ mod tests {
 			error_code: String,
 		}
 
-		let app = create_app().await;
+		let app = create_app(None, None).await;
 		let req1 = test::TestRequest::post().uri("/api/auth/user/create")
 			.insert_header(ContentType::json())
 			.set_payload(r##"{"email":"exists@example.com","password":"a_strong_password1111011","login":false,"email_verified":false,"metadata":""}"##).to_request();
@@ -107,7 +106,7 @@ mod tests {
 			metadata: String,
 		}
 
-		let app = create_app().await;
+		let app = create_app(None, None).await;
 		let req = test::TestRequest::post().uri("/api/auth/user/create")
 			.insert_header(ContentType::json())
 			.set_payload(r##"{"email":"login@example.com","password":"a_strong_password1111011","login":true,"email_verified":false,"metadata":""}"##).to_request();
