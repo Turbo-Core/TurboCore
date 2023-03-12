@@ -4,6 +4,7 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 
 pub mod auth;
+pub mod health;
 
 #[macro_use]
 extern crate lazy_static;

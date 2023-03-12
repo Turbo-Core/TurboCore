@@ -23,6 +23,7 @@ uaparser = "0.6.0"
 tokio = "1.26.0"
 chrono = {version = "0.4.23", default-features = false }
 log = "0.4.17"
+sysinfo = "0.28.2"
 # Database and related
 entity = { path = "entity" }
 migration = { path = "migration" }

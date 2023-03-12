@@ -8,9 +8,10 @@ use actix_web::{
 	web::{self, Data},
 	App, HttpServer,
 };
-use api::{AppState, JsonError};
+use api::{AppState, JsonError, health::ws::WSData};
 use clokwerk::{AsyncScheduler, TimeUnits};
 use migration::{Migrator, MigratorTrait};
+use sysinfo::{System, SystemExt};
 use tokio::{
 	spawn,
 	time::{sleep, Duration},
@@ -66,13 +67,19 @@ async fn main() -> std::io::Result<()> {
 			.into()
 		});
 
+		let ws_data = Data::new(WSData {
+			sys: System::new_all(),
+		});
+
 		App::new()
 			.app_data(Data::new(AppState {
 				connection: connection.to_owned(),
 				config: config.to_owned(),
 				ua_parser,
 			}))
+			.service(web::resource("/api/health/ws").route(web::get().to(api::health::ws::sysinfo_ws)))
 			.app_data(json_cfg)
+			.app_data(ws_data)
 			.wrap(middleware::DefaultHeaders::new().add((SERVER, "TurboCore")))
 			.wrap(Logger::default())
 			.configure(api::auth::add_routes)
