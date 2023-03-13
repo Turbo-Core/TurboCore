@@ -130,7 +130,7 @@ pub fn verify_header(auth_header: Option<&HeaderValue>, secret_key: &Hmac<Sha256
 		}
 	};
 
-	if Utc::now().timestamp() > claims.get("exp").unwrap().parse().unwrap() {
+	if Utc::now().timestamp() > claims["exp"].parse().unwrap() {
 		return HeaderResult::Error(
 			Json(api_error(
 				"The provided token has already expired".to_string(),
@@ -140,7 +140,7 @@ pub fn verify_header(auth_header: Option<&HeaderValue>, secret_key: &Hmac<Sha256
 		);
 	}
 
-	if claims.get("type").unwrap() != "at" {
+	if claims["type"] != "at" {
 		return HeaderResult::Error(
 			Json(api_error(
 				"The provided JWT is not an access token.".to_string(),

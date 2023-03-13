@@ -69,6 +69,7 @@ async fn main() -> std::io::Result<()> {
 
 		let ws_data = Data::new(WSData {
 			sys: System::new_all(),
+			auth: false
 		});
 
 		App::new()

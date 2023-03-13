@@ -5,7 +5,8 @@ pub fn sysinfo(sys: &mut System) -> String {
 	sys.refresh_all();
 	let cpu = sys.cpus().iter().map(|cpu| {
 		json!({
-			"name": cpu.brand(),
+			"name": cpu.name(),
+			"model": cpu.brand(),
 			"usage": cpu.cpu_usage(),
 		})
 	});
@@ -28,7 +29,8 @@ pub fn sysinfo(sys: &mut System) -> String {
                     \"swap_used\": {},
                     \"swap_free\": {}
                 }},
-                \"disks\": {}",
+                \"disks\": {}
+		}}",
 		serde_json::to_string(&cpu.collect::<Vec<_>>()).unwrap(),
 		sys.total_memory(),
 		sys.used_memory(),
