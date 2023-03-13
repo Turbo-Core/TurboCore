@@ -1,7 +1,7 @@
+use crate::auth::create_app;
 use actix_web::test;
 use hmac::{Hmac, Mac};
 use uuid::Uuid;
-use crate::auth::create_app;
 
 mod tests {
 	use std::{collections::BTreeMap, str::FromStr};

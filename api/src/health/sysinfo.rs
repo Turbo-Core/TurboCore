@@ -1,5 +1,5 @@
 use serde_json::json;
-use sysinfo::{CpuExt, System, SystemExt, DiskExt};
+use sysinfo::{CpuExt, DiskExt, System, SystemExt};
 
 pub fn sysinfo(sys: &mut System) -> String {
 	sys.refresh_all();
@@ -11,12 +11,12 @@ pub fn sysinfo(sys: &mut System) -> String {
 		})
 	});
 	let disk = sys.disks().iter().map(|disk| {
-        json!({
-            "name": (*disk.name()).to_str(),
-            "total": disk.total_space(),
-            "free": disk.available_space()
-        })
-    });
+		json!({
+			"name": (*disk.name()).to_str(),
+			"total": disk.total_space(),
+			"free": disk.available_space()
+		})
+	});
 
 	format!(
 		"{{
@@ -38,6 +38,6 @@ pub fn sysinfo(sys: &mut System) -> String {
 		sys.total_swap(),
 		sys.used_swap(),
 		sys.free_swap(),
-        serde_json::to_string(&disk.collect::<Vec<_>>()).unwrap(),
+		serde_json::to_string(&disk.collect::<Vec<_>>()).unwrap(),
 	)
 }

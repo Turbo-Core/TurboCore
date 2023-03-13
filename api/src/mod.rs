@@ -1,4 +1,9 @@
-use actix_web::{http::{header, StatusCode}, web::BytesMut, HttpResponse, ResponseError, body::BoxBody};
+use actix_web::{
+	body::BoxBody,
+	http::{header, StatusCode},
+	web::BytesMut,
+	HttpResponse, ResponseError,
+};
 use lettre::{AsyncSmtpTransport, Tokio1Executor};
 use regex::Regex;
 use serde::{Deserialize, Serialize};

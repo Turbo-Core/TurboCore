@@ -1,17 +1,23 @@
 use actix_http::Request;
-use actix_web::{dev::ServiceResponse, web::{self, Data}, App};
-use api::{JsonError, Argon2Config, Config, AppState, EmailConfig};
+use actix_service::Service;
+use actix_web::test;
+use actix_web::{
+	dev::ServiceResponse,
+	web::{self, Data},
+	App,
+};
+use api::{AppState, Argon2Config, Config, EmailConfig, JsonError};
 use hmac::{Hmac, Mac};
 use lettre::{AsyncSmtpTransport, Tokio1Executor};
 use migration::{Migrator, MigratorTrait};
 use uaparser::UserAgentParser;
-use actix_web::test;
-use actix_service::Service;
-
 
 mod create_user;
 
-pub async fn create_app(mailer: Option<AsyncSmtpTransport<Tokio1Executor>>, email: Option<EmailConfig>) -> impl Service<Request, Response = ServiceResponse, Error = actix_web::Error> {
+pub async fn create_app(
+	mailer: Option<AsyncSmtpTransport<Tokio1Executor>>,
+	email: Option<EmailConfig>,
+) -> impl Service<Request, Response = ServiceResponse, Error = actix_web::Error> {
 	// Create a new HMAC-SHA256 key
 	let secret_key = Hmac::new_from_slice("a_secret_key".repeat(3).as_bytes()).unwrap();
 

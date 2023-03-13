@@ -146,7 +146,8 @@ async fn handle_command(
 					}
 				};
 				// Confirm AT and not expired
-				if claims["type"] == "at" && Utc::now().timestamp() < claims["exp"].parse().unwrap() {
+				if claims["type"] == "at" && Utc::now().timestamp() < claims["exp"].parse().unwrap()
+				{
 					data.auth = true;
 					session.text("ok").await.unwrap();
 					return Ok(());
