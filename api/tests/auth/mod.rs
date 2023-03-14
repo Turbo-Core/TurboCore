@@ -10,6 +10,7 @@ use api::{AppState, Argon2Config, Config, EmailConfig, JsonError};
 use hmac::{Hmac, Mac};
 use lettre::{AsyncSmtpTransport, Tokio1Executor};
 use migration::{Migrator, MigratorTrait};
+use std::path::Path;
 use uaparser::UserAgentParser;
 
 mod create_user;
@@ -25,12 +26,18 @@ pub async fn create_app(
 	let ua_parser = UserAgentParser::from_yaml("../regexes.yaml").unwrap();
 
 	// Create a connection to the database
-	let connection = sea_orm::Database::connect("sqlite://../test.sqlite?mode=rwc".to_string())
-		.await
-		.unwrap();
+	let connection;
 
-	// Run the migrations
-	Migrator::up(&connection, None).await.unwrap();
+	if !Path::new("../test.sqlite").exists() { // Prevent migration from running twice in tests
+		connection = sea_orm::Database::connect("sqlite://../test.sqlite?mode=rwc".to_string())
+			.await
+			.unwrap();
+		Migrator::up(&connection, None).await.unwrap();
+	} else {
+		connection = sea_orm::Database::connect("sqlite://../test.sqlite".to_string())
+			.await
+			.unwrap();
+	}
 
 	// Create the JSON config
 	let json_cfg = web::JsonConfig::default().error_handler(|err, _req| {
