@@ -86,6 +86,7 @@ async fn main() -> std::io::Result<()> {
 			.wrap(middleware::DefaultHeaders::new().add((SERVER, "TurboCore")))
 			.wrap(Logger::default())
 			.configure(api::auth::add_routes)
+            .configure(api::health::add_routes)
 	})
 	.bind(bind_addr)?
 	.run()
