@@ -113,7 +113,7 @@ pub async fn handler(data: Data<AppState>, body: Json<RefreshBody>) -> impl Resp
 
 					// Here is the only time we issue a new token
 					let (access_token, refresh_token, expiry) =
-						get_at_and_rt(&data.connection, &uid, &data.config.secret_key).await;
+						get_at_and_rt(&data.connection, &uid, &data.config.secret_key, false).await;
 
 					return (
 						Json(ApiResponse::RefreshResponse {

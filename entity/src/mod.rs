@@ -2,5 +2,6 @@
 
 pub mod prelude;
 
+pub mod admin_tokens;
 pub mod refresh_tokens;
 pub mod users;

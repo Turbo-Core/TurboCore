@@ -210,7 +210,7 @@ pub async fn get_handler(data: Data<AppState>, path: Path<String>) -> HttpRespon
 	};
 
 	let (at, rt, exp) =
-		get_at_and_rt(&data.connection, &user.uid.to_string(), &data.config.secret_key).await;
+		get_at_and_rt(&data.connection, &user.uid.to_string(), &data.config.secret_key, false).await;
 
 	let redirect_url =
 		format!("{}?uid={}?at={}&rt={}&exp={}", user.uid, claims["next"], at, rt, exp);

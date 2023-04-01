@@ -22,22 +22,10 @@ pub struct SignupBody {
 	email: String,
 	password: String,
 	login: bool,
-	metadata: String,
 }
 
-#[post("/api/auth/user/create")]
+#[post("/api/admin/create")]
 pub async fn handler(data: Data<AppState>, body: Json<SignupBody>) -> impl Responder {
-	// Check email validity
-	if !crate::EMAIL_REGEX.is_match(&body.email) {
-		return (
-			Json(api_error(
-				"The email provided is already in use.".to_string(),
-				"EMAIL_IN_USE".to_string(),
-			)),
-			http::StatusCode::BAD_REQUEST,
-		);
-	}
-
 	// Check password strength
 	let estimate = match zxcvbn(&body.password, &[]) {
 		Ok(ent) => ent,
@@ -51,6 +39,7 @@ pub async fn handler(data: Data<AppState>, body: Json<SignupBody>) -> impl Respo
 			);
 		}
 	};
+
 	let score = estimate.score();
 	if score < data.config.minimum_password_strength {
 		let feedback_msg = match estimate.feedback().clone() {
@@ -66,7 +55,7 @@ pub async fn handler(data: Data<AppState>, body: Json<SignupBody>) -> impl Respo
 		);
 	}
 
-	// Get uid for new user
+	// Get uid for new admin
 	let user_uid = Uuid::new_v4();
 
 	let config = ArgonConfig {
@@ -97,9 +86,9 @@ pub async fn handler(data: Data<AppState>, body: Json<SignupBody>) -> impl Respo
 		last_login: Set(None),
 		updated_at: Set(Utc::now().naive_utc()),
 		active: Set(true),
-		metadata: Set(Some(body.metadata.to_owned())),
-		email_verified: Set(false),
-        is_admin: Set(false),
+		metadata: Set(Some("".to_string())),
+		email_verified: Set(true),
+        is_admin: Set(true),
 	};
 
 	let res = users::Entity::insert(new_user)
@@ -118,7 +107,7 @@ pub async fn handler(data: Data<AppState>, body: Json<SignupBody>) -> impl Respo
 				let uid_str = user_uid.to_string();
 
 				let (token_str, rt_str, short_exp) =
-					util::get_at_and_rt(&data.connection, &uid_str, &data.config.secret_key, false).await;
+					util::get_at_and_rt(&data.connection, &uid_str, &data.config.secret_key, true).await;
 
 				(
 					Json(ApiResponse::LoginResponse {
@@ -126,8 +115,8 @@ pub async fn handler(data: Data<AppState>, body: Json<SignupBody>) -> impl Respo
 						token: token_str,
 						expiry: short_exp,
 						refresh_token: rt_str,
-						email_verified: false,
-						metadata: body.metadata.clone(),
+						email_verified: true,
+						metadata: "".to_string(),
 					}),
 					http::StatusCode::CREATED,
 				)

@@ -20,6 +20,7 @@ pub async fn get_at_and_rt(
 	connection: &DatabaseConnection,
 	uid: &String,
 	key: &hmac::Hmac<sha2::Sha256>,
+    admin: bool
 ) -> (String, String, i64) {
 	let mut token = BTreeMap::new();
 	let mut refresh_token = BTreeMap::new();
@@ -37,6 +38,7 @@ pub async fn get_at_and_rt(
 		.take(5)
 		.map(char::from)
 		.collect();
+
 	refresh_token.insert("iss", "TurboCore");
 	refresh_token.insert("exp", &long_exp_str);
 	refresh_token.insert("uid", uid);
@@ -47,6 +49,11 @@ pub async fn get_at_and_rt(
 	token.insert("exp", &short_exp_str);
 	token.insert("type", "at");
 	token.insert("uid", uid);
+
+    if admin {
+        token.insert("role", "admin");
+        refresh_token.insert("role", "admin");
+    }
 
 	let rt = refresh_token.sign_with_key(key).unwrap();
 
@@ -189,7 +196,7 @@ mod tests {
 		let key: Hmac<sha2::Sha256> = Hmac::new_from_slice(b"a_very_long_secret_key").unwrap();
 
 		// Create a new at and rt pair
-		let (at, rt, exp) = get_at_and_rt(&connection, &uid.to_string(), &key).await;
+		let (at, rt, exp) = get_at_and_rt(&connection, &uid.to_string(), &key, false).await;
 
 		// Verify the at
 		let claims: BTreeMap<String, String> = at.verify_with_key(&key).unwrap();

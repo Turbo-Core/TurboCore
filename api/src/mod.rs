@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 
 pub mod auth;
 pub mod health;
+pub mod admin;
 
 #[macro_use]
 extern crate lazy_static;
