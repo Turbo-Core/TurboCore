@@ -21,7 +21,6 @@ use crate::AppState;
 pub struct SignupBody {
 	email: String,
 	password: String,
-	email_verified: bool,
 	login: bool,
 	metadata: String,
 }
@@ -99,7 +98,8 @@ pub async fn handler(data: Data<AppState>, body: Json<SignupBody>) -> impl Respo
 		updated_at: Set(Utc::now().naive_utc()),
 		active: Set(true),
 		metadata: Set(Some(body.metadata.to_owned())),
-		email_verified: Set(body.email_verified),
+		email_verified: Set(false),
+        is_admin: Set(false),
 	};
 
 	let res = users::Entity::insert(new_user)
@@ -126,7 +126,7 @@ pub async fn handler(data: Data<AppState>, body: Json<SignupBody>) -> impl Respo
 						token: token_str,
 						expiry: short_exp,
 						refresh_token: rt_str,
-						email_verified: body.email_verified,
+						email_verified: false,
 						metadata: body.metadata.clone(),
 					}),
 					http::StatusCode::CREATED,

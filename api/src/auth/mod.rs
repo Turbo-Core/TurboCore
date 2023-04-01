@@ -11,7 +11,7 @@ pub mod logout;
 pub mod magic_link;
 pub mod refresh;
 pub mod reset_password;
-pub mod signup;
+pub mod create_user;
 pub mod update_user;
 pub mod util;
 
@@ -59,7 +59,7 @@ pub fn api_error(message: String, error_code: String) -> ApiResponse {
 }
 
 pub fn add_routes(cfg: &mut web::ServiceConfig) {
-	cfg.service(crate::auth::signup::handler)
+	cfg.service(crate::auth::create_user::handler)
 		.service(crate::auth::login::handler)
 		.service(crate::auth::refresh::handler)
 		.service(crate::auth::get_user::handler)
