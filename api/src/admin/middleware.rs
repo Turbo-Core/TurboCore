@@ -6,7 +6,6 @@ use actix_web::{
 	error::ErrorUnauthorized,
 	Error,
 };
-use entity::admin_tokens::Entity as AdminTokenEntity;
 use futures::{
 	executor::block_on,
 	future::{ok, LocalBoxFuture},
@@ -131,16 +130,6 @@ where
 						}
 					},
 					None => {
-						return unauthorizedBoxPin!();
-					}
-				};
-				match block_on(AdminTokenEntity::find_by_id(token).one(&self.db_conn)) {
-					Ok(token) => {
-						if token.is_none() {
-							return unauthorizedBoxPin!();
-						}
-					}
-					Err(_) => {
 						return unauthorizedBoxPin!();
 					}
 				};

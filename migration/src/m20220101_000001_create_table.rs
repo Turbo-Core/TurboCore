@@ -20,7 +20,6 @@ impl MigrationTrait for Migration {
 					.col(ColumnDef::new(User::Active).boolean().not_null())
 					.col(ColumnDef::new(User::Metadata).string())
 					.col(ColumnDef::new(User::EmailVerified).boolean().not_null())
-                    .col(ColumnDef::new(User::IsAdmin).boolean().not_null())
 					.to_owned(),
 			)
 			.await?;
@@ -47,11 +46,18 @@ impl MigrationTrait for Migration {
 			.await?;
         manager.create_table(
             Table::create()
-                .table(AdminTokenEntry::Table)
-                .if_not_exists()
-                .col(ColumnDef::new(AdminTokenEntry::AdminToken).uuid().not_null().primary_key())
-                .col(ColumnDef::new(AdminTokenEntry::Permission).string().not_null())
-                .to_owned(),
+            .table(Admin::Table)
+            .if_not_exists()
+            .col(ColumnDef::new(Admin::Uid).uuid().not_null().primary_key())
+            .col(ColumnDef::new(Admin::Email).string().not_null())
+            .col(ColumnDef::new(Admin::Password).string().not_null())
+            .col(ColumnDef::new(Admin::CreatedAt).date_time().not_null())
+            .col(ColumnDef::new(Admin::UpdatedAt).date_time().not_null())
+            .col(ColumnDef::new(Admin::LastLogin).date_time())
+            .col(ColumnDef::new(Admin::Active).boolean().not_null())
+            .col(ColumnDef::new(Admin::Metadata).string())
+            .col(ColumnDef::new(Admin::EmailVerified).boolean().not_null())
+            .to_owned()
         ).await?;
 		manager
 			.create_index(
@@ -83,17 +89,7 @@ impl MigrationTrait for Migration {
 					.col(RefreshTokenEntry::RefreshToken)
 					.to_owned(),
 			)
-			.await?;
-        manager
-            .create_index(
-                sea_query::Index::create()
-                    .name("admin_tokens_index")
-                    .if_not_exists()
-                    .table(AdminTokenEntry::Table)
-                    .col(AdminTokenEntry::AdminToken)
-                    .to_owned(),
-            )
-            .await
+			.await
 	}
 	async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
 		manager
@@ -106,15 +102,7 @@ impl MigrationTrait for Migration {
 					.if_exists()
 					.to_owned(),
 			)
-			.await?;
-        manager
-            .drop_table(
-                Table::drop()
-                    .table(AdminTokenEntry::Table)
-                    .if_exists()
-                    .to_owned(),
-            )
-            .await
+			.await
 	}
 }
 
@@ -131,8 +119,7 @@ enum User {
 	LastLogin,
 	Active,
 	Metadata,
-	EmailVerified,
-    IsAdmin
+	EmailVerified
 }
 
 #[derive(Iden)]
@@ -146,9 +133,16 @@ enum RefreshTokenEntry {
 }
 
 #[derive(Iden)]
-enum AdminTokenEntry {
-    #[iden = "admin_tokens"]
-    Table,
-    AdminToken,
-    Permission
+enum Admin {
+	#[iden = "admins"]
+	Table,
+	Uid,
+	Email,
+	Password,
+	CreatedAt,
+	UpdatedAt,
+	LastLogin,
+	Active,
+	Metadata,
+	EmailVerified
 }

@@ -4,3 +4,4 @@ config.json
 .vscode
 cobertura.xml
 test.sqlite
+my.secrets

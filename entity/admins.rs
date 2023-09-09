@@ -3,7 +3,7 @@
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
-#[sea_orm(table_name = "users")]
+#[sea_orm(table_name = "admins")]
 pub struct Model {
 	#[sea_orm(primary_key, auto_increment = false)]
 	pub uid: Uuid,
@@ -15,7 +15,6 @@ pub struct Model {
 	pub active: bool,
 	pub metadata: Option<String>,
 	pub email_verified: bool,
-	pub is_admin: bool,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

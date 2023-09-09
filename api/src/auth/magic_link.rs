@@ -74,7 +74,7 @@ pub async fn post_handler(
 				let now = NaiveDateTime::from_timestamp_opt(Utc::now().timestamp(), 0).unwrap();
 				let new_user = users::ActiveModel {
 					uid: Set(uid),
-					password: Set("0".to_string()),
+					password: Set("0".to_string()), // TODO: change this to something else
 					email: Set(body.email.to_owned()),
 					created_at: Set(now),
 					updated_at: Set(now),

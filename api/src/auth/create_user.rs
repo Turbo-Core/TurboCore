@@ -99,7 +99,6 @@ pub async fn handler(data: Data<AppState>, body: Json<SignupBody>) -> impl Respo
 		active: Set(true),
 		metadata: Set(Some(body.metadata.to_owned())),
 		email_verified: Set(false),
-        is_admin: Set(false),
 	};
 
 	let res = users::Entity::insert(new_user)

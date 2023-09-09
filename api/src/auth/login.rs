@@ -51,7 +51,7 @@ pub async fn handler(data: Data<AppState>, body: Json<LoginBody>) -> impl Respon
 					}
 					let uid_str = &user.uid.to_string();
 					let (at, rt, exp) =
-						get_at_and_rt(&data.connection, uid_str, &data.config.secret_key, user.is_admin).await;
+						get_at_and_rt(&data.connection, uid_str, &data.config.secret_key, false).await;
 					(
 						Json(ApiResponse::LoginResponse {
 							uid: uid_str.to_string(),

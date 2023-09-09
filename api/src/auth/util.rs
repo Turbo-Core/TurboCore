@@ -1,3 +1,5 @@
+/// This module contains utility functions for the auth module
+
 use actix_web::{
 	http::{self, header::HeaderValue, StatusCode},
 	web::Json,
