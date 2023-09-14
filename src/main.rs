@@ -8,6 +8,7 @@ use actix_web::{
 	web::{self, Data},
 	App, HttpServer,
 };
+use actix_cors::Cors;
 use api::{health::ws::WSData, AppState, JsonError};
 use clokwerk::{AsyncScheduler, TimeUnits};
 use migration::{Migrator, MigratorTrait};
@@ -18,6 +19,7 @@ use tokio::{
 };
 use uaparser::UserAgentParser;
 use util::{load_config::load_config, prune_database};
+use log::debug;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -72,6 +74,13 @@ async fn main() -> std::io::Result<()> {
 			auth: false,
 		});
 
+        let mut cors = Cors::permissive();
+        // TODO: Remove permissive, and use the below code with allowed methods added
+        // for uri in config.allowed_origins.iter() {
+        //     cors = cors.allowed_origin(uri);
+        //     debug!("Allowed origin: {}", uri);
+        // }
+
 		App::new()
 			.app_data(Data::new(AppState {
 				connection: connection.to_owned(),
@@ -89,6 +98,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(middleware::DefaultHeaders::new().add((SERVER, "TurboCore")))
 			.wrap(Logger::default())
             .wrap(middlewares::admin_middleware::AdminMiddlewareFactory::new(config.secret_key.clone(), connection.clone()))
+            .wrap(cors)
 	})
 	.bind(bind_addr)?
 	.run()

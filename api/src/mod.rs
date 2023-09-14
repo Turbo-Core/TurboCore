@@ -31,6 +31,7 @@ pub struct Config {
 	pub minimum_password_strength: u8,
 	pub mailer: Option<AsyncSmtpTransport<Tokio1Executor>>,
 	pub email: Option<EmailConfig>,
+    pub allowed_origins: Vec<String>
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

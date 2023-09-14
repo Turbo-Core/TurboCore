@@ -63,6 +63,7 @@ pub async fn create_app(
 					minimum_password_strength: 1,
 					mailer,
 					email,
+                    allowed_origins: vec![]
 				},
 				connection,
 				ua_parser,

@@ -20,6 +20,7 @@ pub struct ConfigInternal {
 	pub argon2_params: Option<Argon2Config>,
 	pub email: Option<EmailConfig>,
 	pub minimum_password_strength: Option<u8>,
+    pub allowed_origins: Vec<String>
 }
 
 fn verify_connection_url(url: &str) -> bool {
@@ -92,6 +93,7 @@ pub fn load_config() -> Config {
 			None => None,
 		},
 		email: json_config.email,
+        allowed_origins: json_config.allowed_origins
 	};
 
 	if !verify_connection_url(&config.connection_url) {

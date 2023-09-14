@@ -74,7 +74,7 @@ where
 					.map_into_right_body()))
 			};
 		}
-		if req.path().starts_with("/api/admin") {
+		if req.path().starts_with("/api/admin") && req.path() != "/api/admin/login" {
 			let token = match req.headers().get("Authorization") {
 				Some(token) => match token.to_str() {
 					Ok(token) => token,

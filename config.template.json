@@ -1,5 +1,5 @@
 {
-    "_WANING": "This file has been added to .gitignore. You should not commit it to any public repositories as it contains sensitive information.",
+    "_WARNING": "This file has been added to .gitignore. You should not commit it to any public repositories as it contains sensitive information.",
     "connection_url": "sqlite::memory:",
     "secret_key": "a_super_secret_key. Use: 'openssl rand -hex 32' to generate one",
     "debug_level": "info",
@@ -19,9 +19,10 @@
         "smtp_password": "a_super_secret_password",
         "smtp_encryption": "TLS",
         "from": "Name <email@example.com>",
-        "reply_to": "No Reply <no-reply@example>",
+        "reply_to": "No Reply <no-reply@example.com>",
         "magic_link_subject": "Magic link",
         "forgot_password_subject": "Forgot password",
         "confirmation_subject": "Email confirmation"
-    }
+    },
+    "allowed_origins": ["https://example.com"]
 }
