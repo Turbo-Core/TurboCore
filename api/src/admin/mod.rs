@@ -2,7 +2,6 @@ use actix_web::web;
 
 pub mod create_admin;
 pub mod login;
-pub mod middleware;
 
 
 pub fn add_routes(cfg: &mut web::ServiceConfig) {

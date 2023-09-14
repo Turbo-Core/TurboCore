@@ -8,7 +8,7 @@ use actix_web::{
 };
 use argon2::{self, Config as ArgonConfig, ThreadMode, Variant, Version};
 use chrono::Utc;
-use entity::admin;
+use entity::admins;
 use migration::{DbErr, OnConflict};
 use rand::{thread_rng, Rng};
 use sea_orm::{EntityTrait, Set};
@@ -78,7 +78,7 @@ pub async fn handler(data: Data<AppState>, body: Json<SignupBody>) -> impl Respo
 		argon2::hash_encoded(body.password.as_bytes(), salt.as_slice(), &config).unwrap();
 
 	// FIXME: Vulnerable until sanitize middleware is implemented
-	let new_user = admin::ActiveModel {
+	let new_user = admins::ActiveModel {
 		uid: Set(user_uid),
 		email: Set(body.email.to_owned()),
 		password: Set(password_hash),
@@ -90,10 +90,10 @@ pub async fn handler(data: Data<AppState>, body: Json<SignupBody>) -> impl Respo
 		email_verified: Set(true),
 	};
 
-	let res = admin::Entity::insert(new_user)
+	let res = admins::Entity::insert(new_user)
 		.on_conflict(
 			// If email exists, we will ignore the request to create a new user, causing a DbErr::RecordNotInserted
-			OnConflict::column(admin::Column::Email)
+			OnConflict::column(admins::Column::Email)
 				.do_nothing()
 				.to_owned(),
 		)

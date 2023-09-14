@@ -88,7 +88,7 @@ async fn main() -> std::io::Result<()> {
             .configure(api::admin::add_routes)
             .wrap(middleware::DefaultHeaders::new().add((SERVER, "TurboCore")))
 			.wrap(Logger::default())
-            .wrap(api::admin::middleware::AdminMiddlewareFactory::new(config.secret_key.clone(), connection.clone()))
+            .wrap(middlewares::admin_middleware::AdminMiddlewareFactory::new(config.secret_key.clone(), connection.clone()))
 	})
 	.bind(bind_addr)?
 	.run()

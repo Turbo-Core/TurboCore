@@ -21,6 +21,7 @@ dependencies = [
  "hmac",
  "lettre",
  "log",
+ "middlewares",
  "migration",
  "rust-argon2",
  "sea-orm",
@@ -1900,6 +1901,36 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d61c719bcfbcf5d62b3a09efa6088de8c54bc0bfcd3ea7ae39fcc186108b8de1"
 dependencies = [
  "autocfg",
+]
+
+[[package]]
+name = "middlewares"
+version = "0.1.0"
+dependencies = [
+ "actix-service",
+ "actix-web",
+ "actix-ws",
+ "chrono",
+ "entity",
+ "env_logger",
+ "futures",
+ "futures-util",
+ "hmac",
+ "jwt",
+ "lazy_static",
+ "log",
+ "rand",
+ "regex",
+ "rust-argon2",
+ "sea-orm",
+ "serde",
+ "serde_json",
+ "sha2",
+ "sysinfo",
+ "tokio",
+ "uaparser",
+ "uuid",
+ "zxcvbn",
 ]
 
 [[package]]

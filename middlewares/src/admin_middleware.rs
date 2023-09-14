@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, rc::Rc, str::FromStr};
+use std::{collections::BTreeMap, rc::Rc};
 
 use actix_web::{
 	body::{EitherBody, MessageBody},
@@ -7,16 +7,13 @@ use actix_web::{
 	Error,
 };
 use futures::{
-	executor::block_on,
 	future::{ok, LocalBoxFuture},
 	FutureExt,
 };
 use futures_util::future::Ready;
 use hmac::Hmac;
 use jwt::VerifyWithKey;
-use sea_orm::EntityTrait;
 use sha2::Sha256;
-use uuid::Uuid;
 
 pub struct AdminMiddlewareFactory {
 	key: Hmac<Sha256>,
@@ -121,19 +118,9 @@ where
 						return unauthorizedBoxPin!();
 					}
 				};
-			} else if parts[0] == "token" || parts[0] == "Token" {
-				let token = match parts.get(1) {
-					Some(token) => match Uuid::from_str(token) {
-						Ok(token) => token,
-						Err(_) => {
-							return unauthorizedBoxPin!();
-						}
-					},
-					None => {
-						return unauthorizedBoxPin!();
-					}
-				};
-			} else {
+			} 
+            // TODO: Add api keys here
+            else {
 				return unauthorizedBoxPin!();
 			}
 		}

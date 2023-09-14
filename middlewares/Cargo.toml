@@ -1,0 +1,45 @@
+# TODO: Remove unused deps
+[package]
+name = "middlewares"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+name = "middlewares"
+path = "src/mod.rs"
+
+[dependencies]
+actix-web = "4"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1.0.93"
+env_logger = "^0.10.0"
+uuid = { version = "1.3.0", features = ["v4", "fast-rng"] }
+hmac = "0.12.1"
+sha2 = "0.10.6"
+jwt = "0.16.0"
+lazy_static = "1.4.0"
+regex = "1.7.1"
+zxcvbn = "2.2.1"
+actix-ws = "0.2.0"
+futures-util = "0.3"
+tokio = "1.26.0"
+sysinfo = "0.28.2"
+# Sea-ORM
+entity = { path = "../entity" }
+sea-orm = { version = "^0", features = [
+    "sqlx-mysql",
+    "sqlx-postgres",
+    "sqlx-sqlite",
+    "runtime-actix-native-tls",
+    "macros",
+    "with-uuid",
+    "with-json",
+] }
+rust-argon2 = "1.0.0"
+rand = "0.8.5"
+log = "0.4.17"
+chrono = {version = "0.4.23", default-features = false, features = ["serde"]}
+uaparser = "0.6.0"
+futures = "0.3.28"
+actix-service = "2.0.2"
